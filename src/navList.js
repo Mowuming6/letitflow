@@ -1,0 +1,15 @@
+export const NAV_LIST = [
+  { path: '/',          text: '首页',     icon: '/images/tab_home.png',       activeIconFile: 'tab_home_active.png' },
+  { path: '/box',       text: '每日运势', icon: '/images/tab_box.png',        activeIconFile: 'tab_box_active.png' },
+  { path: '/dice',      text: '骰子',     icon: '/images/tab_dice.png',       activeIconFile: 'tab_dice_active.png' },
+  { path: '/coin',      text: '硬币',     icon: '/images/tab_coin.png',       activeIconFile: 'tab_coin_active.png' },
+  { path: '/wheel',     text: '命运转盘', icon: '/images/tab_wheel.png',      activeIconFile: 'tab_wheel_active.png' },
+  { path: '/jiao',      text: '掷圣杯',   icon: '/images/tab_jiao.png',       activeIconFile: 'tab_jiao_active.png' },
+  { path: '/qian',      text: '观音灵签', icon: '/images/tab_qian.png',       activeIconFile: 'tab_qian_active.png' },
+  { path: '/liuyao',    text: '金钱卦',   icon: '/images/tab_liuyao.png',     activeIconFile: 'tab_liuyao_active.png' },
+  { path: '/plum',      text: '梅花易数', icon: '/images/tab_plum.png',       activeIconFile: 'tab_plum_active.png' },
+  { path: '/tarot',     text: '塔罗占卜', icon: '/images/tab_tarot.png',      activeIconFile: 'tab_tarot_active.png' },
+  { path: '/book',      text: '答案之书', icon: '/images/tab_book.png',       activeIconFile: 'tab_book_active.png' },
+  { path: '/lenormand', text: '雷诺曼牌', icon: '/images/tab_lenormand.png',  activeIconFile: 'tab_lenormand_active.png' },
+  { path: '/history',   text: '占卜历史', icon: '/images/tab_history.png',    activeIconFile: 'tab_history_active.png' },
+]

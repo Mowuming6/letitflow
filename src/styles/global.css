@@ -1,0 +1,1055 @@
+/* ── CSS变量默认值（金主题）──────────────────────────── */
+:root {
+  --primary:           #DAAB5A;
+  --primary-rgb:       218,171,90;
+  --primary-dark:      #C49A3C;
+  --primary-dark-rgb:  196,154,60;
+  --primary-light:     #FFF8EC;
+  --primary-light-rgb: 255,248,236;
+  --primary-shadow:    rgba(218,171,90,0.30);
+  --page-bg:           linear-gradient(180deg, #FFF8EC 0%, #faf9f8 90%);
+  --dialog-origin-x:   calc(100vw - 28px);
+  --dialog-origin-y:   24px;
+  --dialog-origin-dx:  42vw;
+  --dialog-origin-dy:  -46vh;
+}
+
+/* 自定义顶部导航栏 */
+.fake-nav {
+  position: fixed;
+  top: 0; left: 50%; right: auto;
+  width: 100%;
+  max-width: 480px;
+  transform: translateX(-50%);
+  background: #FFFFFF;
+  z-index: 100;
+  border-bottom: 1px solid #F0F0F0;
+}
+.fake-nav-bar {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fake-nav-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1A1A2E;
+}
+.fake-nav-back {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 8px;
+}
+
+/* 全局样式 */
+body {
+  color: #333333;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+
+.container {
+  min-height: 100vh;
+  background: var(--page-bg);
+  position: relative;
+  isolation: isolate;
+  padding-bottom: 10px;
+  overflow: hidden; /* fallback: prevents particle overflow from increasing page scrollHeight */
+  overflow: clip;   /* preferred: clip overflow without creating a scroll container */
+}
+.container::before,
+.container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-repeat: repeat;
+  will-change: background-position, opacity, transform;
+}
+.container::before {
+  /* 主粒子层：用不规则尺寸打散网格感 */
+  background-image:
+    radial-gradient(circle, rgba(var(--primary-rgb), 0.38) 0 1.9px, transparent 2.9px),
+    radial-gradient(circle, rgba(var(--primary-rgb), 0.30) 0 1.5px, transparent 2.4px),
+    radial-gradient(circle, rgba(var(--primary-dark-rgb), 0.23) 0 1.6px, transparent 2.5px),
+    radial-gradient(circle, rgba(var(--primary-light-rgb), 0.18) 0 2.1px, transparent 3.1px),
+    radial-gradient(circle, rgba(var(--primary-rgb), 0.28) 0 1.3px, transparent 2.2px),
+    radial-gradient(circle, rgba(var(--primary-dark-rgb), 0.18) 0 1.4px, transparent 2.3px);
+  background-size: 137px 173px, 211px 257px, 173px 229px, 263px 197px, 149px 281px, 307px 233px;
+  background-position: 23px 11px, 91px 57px, 46px 33px, 134px 84px, 8px 126px, 176px 18px;
+  animation: themeParticlesSeamlessA 22s linear infinite;
+  opacity: 0.7;
+  filter: blur(0.22px);
+  transform: rotate(-1.2deg) scale(0.65);
+  transform-origin: 50% 50%;
+}
+.container::after {
+  /* 微粒子层：更小更密，并与主层错位 */
+  background-image:
+    radial-gradient(circle, rgba(var(--primary-rgb), 0.31) 0 1.05px, transparent 1.9px),
+    radial-gradient(circle, rgba(var(--primary-rgb), 0.27) 0 0.85px, transparent 1.65px),
+    radial-gradient(circle, rgba(var(--primary-dark-rgb), 0.22) 0 0.95px, transparent 1.75px),
+    radial-gradient(circle, rgba(var(--primary-light-rgb), 0.19) 0 1.15px, transparent 2px),
+    radial-gradient(circle, rgba(var(--primary-rgb), 0.24) 0 0.75px, transparent 1.55px),
+    radial-gradient(circle, rgba(var(--primary-rgb), 0.22) 0 0.9px, transparent 1.7px),
+    radial-gradient(circle, rgba(var(--primary-light-rgb), 0.16) 0 1.25px, transparent 2.1px);
+  background-size: 89px 109px, 131px 167px, 157px 103px, 113px 149px, 179px 127px, 67px 83px, 223px 179px;
+  background-position: 7px 4px, 49px 28px, 102px 61px, 31px 19px, 76px 73px, 54px 40px, 12px 11px;
+  animation: themeParticlesSeamlessB 28s linear infinite;
+  animation-delay: -9s;
+  opacity: 0.54;
+  filter: blur(0.38px);
+  transform: rotate(1.4deg) scale(0.60);
+  transform-origin: 50% 50%;
+}
+.container > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes themeParticlesSeamlessA {
+  0% {
+    background-position: 23px 11px, 91px 57px, 46px 33px, 134px 84px, 8px 126px, 176px 18px;
+  }
+  48% {
+    background-position: 35px -66px, 82px -38px, 61px -84px, 126px -6px, -4px -22px, 193px -92px;
+  }
+  100% {
+    background-position: 23px -162px, 91px -200px, 46px -196px, 134px -113px, 8px -155px, 176px -215px;
+  }
+}
+
+@keyframes themeParticlesSeamlessB {
+  0% {
+    background-position: 7px 4px, 49px 28px, 102px 61px, 31px 19px, 76px 73px, 54px 40px, 12px 11px;
+  }
+  42% {
+    background-position: -3px -24px, 58px -41px, 96px 12px, 43px -48px, 66px 16px, 62px -8px, 21px -63px;
+  }
+  100% {
+    background-position: 7px -105px, 49px -139px, 102px -42px, 31px -130px, 76px -54px, 54px -43px, 12px -168px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container::before,
+  .container::after {
+    animation: none;
+    opacity: 0.28;
+  }
+}
+
+.top-slogan {
+  text-align: center;
+  font-size: 13px;
+  color: #585858;
+  padding: 10px;
+  letter-spacing: 1px;
+}
+
+/* 主卡片容器 */
+.main-card {
+  margin: 5px 5px 0;
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  position: relative;
+}
+
+/* 页面标题 */
+.page-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: #1A1A2E;
+  text-align: center;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.page-subtitle {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+/* 输入框 */
+.input-field {
+  background: #F5F5F7;
+  border: 1px solid var(--primary);
+  border-radius: 7px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #333;
+  width: 95%;
+  margin-left: 2.5%;
+  height: 35px;
+  line-height: 35px;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  outline: none;
+  display: block;
+}
+.input-field::placeholder {
+  color: rgba(0,0,0,0.3);
+}
+
+/* Canvas舞台区 */
+.stage-area {
+  width: 100%;
+  height: 190px;
+  background: var(--primary-light);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 8px;
+}
+.stage-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 主按钮 */
+.btn-gold {
+  display: block;
+  width: 100%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 25px;
+  padding: 9px 0;
+  border: none;
+  text-align: center;
+  box-shadow: 0 2px 8px var(--primary-shadow);
+  letter-spacing: 1px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.btn-gold:active {
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+.btn-gold:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* 描边按钮 */
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: bold;
+  border: 1px solid var(--primary);
+  border-radius: 25px;
+  padding: 11px 0;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* 提示文字 */
+.hint-text {
+  font-size: 11px;
+  color: #BBBBBB;
+  text-align: center;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.hint-icon { font-size: 10px; }
+
+/* 结果框 */
+.result-box {
+  background: var(--primary-light, #FFF8EC); /* 采用主题专属微亮底色，增加融合质感 */
+  border: 1px dashed var(--primary, #DAAB5A); /* 精致的主题虚线内圈 */
+  outline: 4px solid rgba(var(--primary-rgb), 0.05); /* 优雅的外层主题微衬 */
+  border-radius: 8px;
+  padding: 16px 14px;
+  margin-top: 14px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02), 0 1px 4px rgba(var(--primary-rgb), 0.04);
+}
+
+/* 典雅古风结果角饰 (资格角) */
+.result-box::before, .result-box::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--primary, #DAAB5A);
+}
+.result-box::before {
+  top: 4px;
+  left: 4px;
+  border-right: none;
+  border-bottom: none;
+}
+.result-box::after {
+  bottom: 4px;
+  right: 4px;
+  border-left: none;
+  border-top: none;
+}
+.result-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+.result-big {
+  font-size: 20px;
+  font-weight: bold;
+  color: #1A1A2E;
+}
+.result-text {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.8;
+}
+.highlight {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+/* 分节标题 */
+.section-title {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+/* 分隔线 */
+.divider {
+  height: 1px;
+  background: #EBEBEB;
+  margin: 10px 0;
+}
+
+/* 动画 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeInUp 0.4s ease;
+}
+
+/* 通用卡片 */
+.card {
+  background: #FFFFFF;
+  border: 1px solid #EBEBEB;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 8px;
+}
+
+/* 行布局 */
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.flex-1 { flex: 1; }
+
+/* ===== 使用说明弹窗 ===== */
+.help-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 28px !important;
+  background: var(--primary-light) !important;
+  border: 1px solid var(--primary) !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  color: var(--primary) !important;
+  z-index: 100;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.help-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.42);
+  z-index: 9999;
+  overflow: hidden;
+}
+.help-popup {
+  width: min(84vw, 380px);
+  max-height: 70vh;
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 24px 16px 18px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.16);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.help-popup-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1A1A2E;
+  text-align: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #EBEBEB;
+  flex-shrink: 0;
+}
+.help-popup-content {
+  display: block;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  flex: 1;
+}
+.help-popup-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+}
+
+body.dialog-open .container::before,
+body.dialog-open .container::after {
+  animation-play-state: paused;
+}
+
+/* ===== Toast / Modal ===== */
+.toast-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 99999;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 20px 16px;
+  width: 78%;
+  max-width: 320px;
+}
+.modal-title {
+  font-size: 17px;
+  font-weight: bold;
+  color: #1a1a2e;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.modal-content {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 18px;
+  line-height: 1.6;
+}
+.modal-btns {
+  display: flex;
+  border-top: 1px solid #eee;
+  margin: 0 -20px -16px;
+}
+.modal-btn {
+  flex: 1;
+  text-align: center;
+  padding: 13px 0;
+  font-size: 16px;
+  cursor: pointer;
+}
+.modal-btn + .modal-btn {
+  border-left: 1px solid #eee;
+}
+.modal-btn.confirm { color: var(--primary); font-weight: bold; }
+.modal-btn.danger  { color: #e05c5c; font-weight: bold; }
+
+/* ══════════════════════════════════════════
+   Desktop responsive (≥768px)
+   ══════════════════════════════════════════ */
+@media (min-width: 768px) {
+  /* Hide mobile-only UI */
+  .fake-nav { display: none !important; }
+
+  /* Reset container for desktop */
+  .container {
+    padding-top: 10px !important;
+    padding-bottom: 6px !important; /* 👈 将留白缩紧，极大地减小或消除不需要的微溢出滚动范围 */
+    min-height: 100vh;
+    width: 100%;
+    max-width: none !important;
+    background: var(--page-bg) !important;
+  }
+
+  /* Card larger on desktop */
+  .main-card {
+    max-width: 800px;
+    margin: 0 auto 12px !important;
+  }
+
+  /* Larger stage canvas */
+  .stage-area { height: 300px; }
+
+  /* Slogan spacing */
+  .top-slogan { padding-top: 0px; }
+
+  /* Wheel canvas larger */
+  .wheel-canvas {
+    width: 320px !important;
+    height: 320px !important;
+  }
+
+  /* Fan canvas taller */
+  .fan-canvas { height: 320px !important; }
+
+  /* Input fields full width */
+  .input-field { width: 96%; margin-left: 2%; }
+
+  /* Page content background card */
+  .page-wrap-inner {
+    background: #FFFFFF;
+    border-radius: 0;
+    min-height: 100vh;
+  }
+}
+
+/* ── Wide desktop (≥1200px): wider content ── */
+@media (min-width: 1200px) {
+  .container { max-width: none !important; }
+  .main-card { max-width: 860px; margin: 0 auto 16px !important; }
+  .stage-area { height: 360px; }
+  .wheel-canvas { width: 400px !important; height: 400px !important; }
+  .fan-canvas { height: 300px !important; }
+}
+
+/* ── 全局黄金按钮流光效果（100% 强力穿透组件 scoped） ── */
+.btn-gold {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.btn-gold::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -150%; /* 绝对不能加 !important，否则会阻塞 Keyframes 动画的 left 属性运动 */
+  width: 80% !important;
+  height: 100% !important;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.50) 60%,
+    transparent 100%
+  ) !important;
+  transform: skewX(-30deg) !important;
+  pointer-events: none !important;
+}
+
+.btn-gold:not(:disabled)::after {
+  animation: shine-flow-global 15s infinite ease-in-out !important;
+}
+
+@keyframes shine-flow-global {
+  0% { left: -150%; }
+  10%, 100% { left: 150%; }
+}
+
+/* ── 命理六元素主题专用背景粒子效果（全新设计，低密度，呼吸感十足） ── */
+
+/* 1. 火主题 (Huo) - 上升 */
+.theme-huo .container::before {
+  /* 两个图层分别采用一左一右轻微倾斜旋转，使火星错落上升飞舞，避免生硬的统一方向 */
+  transform: rotate(8deg) skewX(-4deg) scale(1.2) !important;
+  transform-origin: 50% 50% !important;
+  inset: -15% !important; /* 拓展边界，确保旋转后容器边缘不露白 */
+
+  /* 彻底改用高透明度的温润金黄色泽渐变，去掉刺眼的白炽光，与背景柔和融入，不喧宾夺主 */
+  background-image:
+    radial-gradient(circle, rgba(255, 146, 38, 0.883) 0px, rgba(255, 240, 175, 0.916) 2.5px, transparent 3.5px),
+    radial-gradient(circle, rgba(250, 97, 50, 0.802) 0px, rgba(255, 211, 107, 0.881) 2px, transparent 3.0px),
+    radial-gradient(circle, rgba(255,235,175,0.65) 0px, rgba(255,171,64,0.35) 1.5px, transparent 2.4px);
+  background-size: 230px 229px, 260px 257px, 200px 233px;
+  animation: themeParticlesSeamlessUpA 16s linear infinite !important;
+  opacity: 0.65 !important; /* 大幅降低不透明度，使火星成为非常低调柔和的背景点缀 */
+  filter: blur(0.15px) !important; /* 稍微增加模糊度，使边缘过渡极度柔和 */
+}
+.theme-huo .container::after {
+  /* 另一层向反方向倾斜，实现交叉上升的气流感 */
+  transform: rotate(-6deg) skewX(3deg) scale(1.5) !important;
+  transform-origin: 50% 50% !important;
+  inset: -15% !important;
+
+  background-image:
+    radial-gradient(circle, rgba(255, 111, 0, 0.512) 0px, rgba(255,224,130,0.75) 2.5px, transparent 2.0px),
+    radial-gradient(circle, rgba(255,249,196,0.65) 0px, rgba(255,179,0,0.25) 1.5px, transparent 1.6px),
+    radial-gradient(circle, rgba(255, 109, 64, 0.523) 0px, rgba(255,235,175,0.55) 2px, transparent 2.2px);
+  background-size: 160px 167px, 190px 149px, 210px 127px;
+  animation: themeParticlesSeamlessUpB 20s linear infinite !important;
+  animation-delay: -5s !important;
+  opacity: 0.65 !important; /* 微粒层更接近半透明，极其隐约 */
+  filter: blur(0.1px) !important;
+}
+
+/* 2. 水主题 (Shui) - 下降 - 精致拉伸动态雨滴（尺寸整体变大2倍/部分变大1.5倍 + 下落速度变快2倍） */
+.theme-shui .container::before {
+  transform: rotate(2deg) scale(0.60) !important;
+  transform-origin: 50% 50% !important;
+  inset: -50% !important; /* 调整为 -50%：解决背景无法铺满、上方空出白边的问题，确保在 scale 缩小到 0.60 甚至更小时依然能 100% 铺满屏幕 */
+
+  /* 雨滴（在上一版基础上：整体放大2倍，部分层放大1.5倍，运动速度变快2倍即动画周期缩短一半）：
+     层1/3放大2.0倍，层2放大1.5倍。下落动画周期由24秒缩短至12秒。
+     【物理特性升级】：雨滴刚出现时没有拖尾（呈现完美圆形水珠），在加速下落过程中逐渐拉伸出高光拖尾，模拟物理重力感。 */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='rg1' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='rgba(113,135,155,0)'/%3E%3Cstop offset='0.5' stop-color='rgba(113,135,155,0.4)'/%3E%3Cstop offset='1' stop-color='rgba(255,255,255,0.95)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23rg1)' d='M50,51 Q50.4,61.2 52,65 A2,2 0 1,1 48,65 Q49.6,61.2 50,51Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='rg2' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='rgba(113,135,155,0)'/%3E%3Cstop offset='0.4' stop-color='rgba(140,165,185,0.3)'/%3E%3Cstop offset='1' stop-color='rgba(180,215,255,0.9)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23rg2)' d='M50,56 Q50.2,63.1 51,65 A1,1 0 1,1 49,65 Q49.8,63.1 50,56Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='rg3' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='rgba(113,135,155,0)'/%3E%3Cstop offset='0.6' stop-color='rgba(113,135,155,0.35)'/%3E%3Cstop offset='1' stop-color='rgba(255,255,255,0.95)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23rg3)' d='M50,57 Q50.2,63.4 50.8,65 A0.8,0.8 0 1,1 49.2,65 Q49.8,63.4 50,57Z'/%3E%3C/svg%3E");
+  background-size: 450px 229px, 500px 257px, 550px 233px;
+  animation: themeParticlesSeamlessDownA 6s linear infinite !important; /* 速度翻倍，时间减半 */
+  opacity: 0.65 !important;
+  filter: blur(0.15px) !important;
+}
+.theme-shui .container::after {
+  transform: rotate(-1deg) scale(0.60) !important;
+  transform-origin: 50% 50% !important;
+  inset: -50% !important; /* 调整为 -50%：同理，完全铺满背景，不留白边 */
+
+  /* 后景雨滴：
+     层4放大1.5倍，层5放大2.0倍，层6放大1.5倍。下落动画周期由30秒缩短至15秒。
+     伸缩动态也等比例加快，确保流体物理规律完全真实一致。 */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='rg4' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='rgba(113,135,155,0)'/%3E%3Cstop offset='0.5' stop-color='rgba(113,135,155,0.3)'/%3E%3Cstop offset='1' stop-color='rgba(113,135,155,0.85)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23rg4)' d='M50,56 Q50.3,62.2 51.4,65 A1.4,1.4 0 1,1 48.6,65 Q49.7,62.2 50,56Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='rg5' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='rgba(113,135,155,0)'/%3E%3Cstop offset='0.4' stop-color='rgba(113,135,155,0.25)'/%3E%3Cstop offset='1' stop-color='rgba(255,255,255,0.85)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23rg5)' d='M50,55 Q50.3,62.1 51.4,65 A1.4,1.4 0 1,1 48.6,65 Q49.7,62.1 50,55Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='rg6' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='rgba(113,135,155,0)'/%3E%3Cstop offset='0.5' stop-color='rgba(113,135,155,0.25)'/%3E%3Cstop offset='1' stop-color='rgba(113,135,155,0.8)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23rg6)' d='M50,57 Q50.2,63.2 50.9,65 A0.9,0.9 0 1,1 49.1,65 Q49.8,63.2 50,57Z'/%3E%3C/svg%3E");
+  background-size: 350px 167px, 400px 149px, 450px 127px;
+  animation: themeParticlesSeamlessDownB 15s linear infinite !important; /* 速度翻倍，时间减半 */
+  animation-delay: -3.5s !important;
+  opacity: 0.65 !important;
+  filter: blur(0.15px) !important;
+}
+
+/* 3. 木主题 (Mu) - 下降 - 树叶形状 */
+.theme-mu .container::before {
+  transform: scale(1.5) !important;
+  transform-origin: 50% 50% !important;
+  inset: -10% !important;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 229'%3E%3Cg transform='translate(100,90)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' dur='4.2s' repeatCount='indefinite' values='-30 0 0; 25 0 0; -30 0 0' keyTimes='0; 0.5; 1'/%3E%3Cpath fill='rgba(48,95,38,0.72)' d='M0,-5 Q4,0 0,5 Q-4,0 0,-5Z'/%3E%3Cline stroke='rgba(28,68,22,0.52)' stroke-width='0.7' x1='0' y1='-5' x2='0' y2='5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 440 257'%3E%3Cg transform='translate(200,150)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' dur='3.8s' repeatCount='indefinite' values='-35 0 0; 22 0 0; -35 0 0' keyTimes='0; 0.5; 1'/%3E%3Cpath fill='rgba(150,200,108,0.52)' d='M-3,-4 Q1,-2 3,4 Q-2,1 -3,-4Z'/%3E%3Cpath stroke='rgba(58,98,38,0.36)' stroke-width='0.6' fill='none' d='M-3,-4 Q0,0 3,4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 233'%3E%3Cg transform='translate(80,48)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' dur='4s' repeatCount='indefinite' values='-22 0 0; 32 0 0; -22 0 0' keyTimes='0; 0.5; 1'/%3E%3Cpath fill='rgba(82,138,62,0.64)' d='M0,1 Q-3,-3 -4,0 Q-1,3 0,1Z'/%3E%3Cpath fill='rgba(82,138,62,0.64)' d='M0,1 Q3,-4 4,-1 Q1,3 0,1Z'/%3E%3Cline stroke='rgba(48,88,34,0.44)' stroke-width='0.6' x1='0' y1='1' x2='0' y2='6'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size: 360px 229px, 440px 257px, 320px 233px;
+  animation: themeParticlesSeamlessDownA 20s linear infinite !important;
+  opacity: 0.52 !important;
+  filter: blur(0.15px) !important;
+}
+.theme-mu .container::after {
+  transform: scale(1.5) !important;
+  transform-origin: 50% 50% !important;
+  inset: -10% !important;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 167'%3E%3Cg transform='translate(250,80)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' dur='4.6s' repeatCount='indefinite' values='-30 0 0; 20 0 0; -30 0 0' keyTimes='0; 0.5; 1'/%3E%3Cpath fill='rgba(115,170,85,0.58)' d='M-3,-4 Q1,-2 3,4 Q-2,1 -3,-4Z'/%3E%3Cpath stroke='rgba(48,88,34,0.44)' stroke-width='0.6' fill='none' d='M-3,-4 Q0,0 3,4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 350 149'%3E%3Cg transform='translate(60,100)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' dur='4s' repeatCount='indefinite' values='-45 0 0; 20 0 0; -45 0 0' keyTimes='0; 0.5; 1'/%3E%3Cpath fill='rgba(182,222,138,0.46)' d='M0,1 Q-3,-3 -4,0 Q-1,3 0,1Z'/%3E%3Cpath fill='rgba(182,222,138,0.46)' d='M0,1 Q3,-4 4,-1 Q1,3 0,1Z'/%3E%3Cline stroke='rgba(58,98,38,0.36)' stroke-width='0.6' x1='0' y1='1' x2='0' y2='6'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 127'%3E%3Cg transform='translate(150,55)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' dur='5s' repeatCount='indefinite' values='-25 0 0; 28 0 0; -25 0 0' keyTimes='0; 0.5; 1'/%3E%3Cpath fill='rgba(168,212,90,0.44)' d='M0,-5 Q4,0 0,5 Q-4,0 0,-5Z'/%3E%3Cline stroke='rgba(58,98,38,0.36)' stroke-width='0.7' x1='0' y1='-5' x2='0' y2='5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size: 400px 167px, 350px 149px, 420px 127px;
+  animation: themeParticlesSeamlessDownB 26s linear infinite !important;
+  animation-delay: -4s !important;
+  opacity: 0.45 !important;
+  filter: blur(0.2px) !important;
+}
+
+
+
+
+
+/* 4. 土主题 (Tu) - 下降 - 小沙砾小石块 */
+.theme-tu .container::before {
+  transform: rotate(2deg) skewX(-1deg) scale(1.00) !important;
+  transform-origin: 50% 50% !important;
+  inset: -15% !important;
+  background-image:
+    radial-gradient(circle, rgba(145, 129, 55, 0.52) 0px, rgba(113, 111, 43, 0.442) 2.0px, transparent 2.8px),
+    radial-gradient(circle, rgba(218, 183, 126, 0.481) 0px, rgba(178, 142, 85, 0.342) 1.4px, transparent 2.0px),
+    radial-gradient(circle, rgba(188, 134, 58, 0.44) 0px, rgba(142,96,32,0.52) 1.8px, transparent 2.5px);
+  background-size: 260px 229px, 310px 257px, 220px 233px;
+  animation: themeParticlesSeamlessDownA 15s linear infinite !important;
+  opacity: 0.82 !important;
+  filter: blur(0.1px) !important;
+}
+.theme-tu .container::after {
+  transform: rotate(-1deg) skewX(1deg) scale(1.05) !important;
+  transform-origin: 50% 50% !important;
+  inset: -15% !important;
+  background-image:
+    radial-gradient(circle, rgba(98, 86, 28, 0.477) 0px, rgba(135, 88, 42, 0.471) 1.8px, transparent 2.5px),
+    radial-gradient(circle, rgba(228, 202, 155, 0.469) 0px, rgba(195, 162, 108, 0.443) 1.2px, transparent 1.8px),
+    radial-gradient(circle, rgba(168, 108, 52, 0.468) 0px, rgba(122, 75, 32, 0.369) 1.6px, transparent 2.2px);
+  background-size: 240px 167px, 280px 149px, 210px 127px;
+  animation: themeParticlesSeamlessDownB 15s linear infinite !important;
+  animation-delay: 0.5 !important;
+  opacity: 0.70 !important;
+  filter: blur(0.1px) !important;
+}
+
+
+/* 5. 金主题 (Jin) - 上升 - 金属亮片形状 */
+.theme-jin .container::before {
+  transform: rotate(5deg) skewX(-3deg) scale(1.) !important;
+  transform-origin: 50% 50% !important;
+  inset: -15% !important;
+  background-image:
+    radial-gradient(circle, rgba(250, 212, 136, 0.98) 0px, rgba(255, 204, 38, 0.92) 1.8px, rgba(255, 228, 22, 0.905) 2.8px, transparent 3.0px),
+    radial-gradient(circle, rgba(253, 248, 237, 0.98) 0px, rgba(243, 214, 48, 0.88) 0.8px, transparent 1.6px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 510 233'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='rgba(255, 230, 102,1)'/%3E%3Cstop offset='0.45' stop-color='rgba(255, 230, 102,1)'/%3E%3Cstop offset='1' stop-color='rgba(255, 230, 102,1)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='251' y='112.5' width='8' height='8' fill='url(%23g)' transform='rotate(45 255 116.5)'/%3E%3C/svg%3E");
+  background-size: 260px 229px, 300px 257px, 220px 233px;
+  animation: themeParticlesSeamlessUpA 10s linear infinite !important;
+  opacity: 0.80 !important;
+  filter: none !important;
+}
+.theme-jin .container::after {
+  transform: rotate(-4deg) skewX(2deg) scale(1.05) !important;
+  transform-origin: 50% 50% !important;
+  inset: -15% !important;
+  background-image:
+    radial-gradient(circle, rgb(255, 212, 38) 0px, rgb(255, 230, 102) 3px, transparent 2.4px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 149'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='rgba(235,195,42,0.55)'/%3E%3Cstop offset='0.45' stop-color='rgba(255, 246, 197,0.98)'/%3E%3Cstop offset='1' stop-color='rgba(235,195,42,0.50)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='192' y='71.5' width='6' height='6' fill='url(%23g)' transform='rotate(45 195 74.5)'/%3E%3C/svg%3E"),
+    radial-gradient(circle, rgba(255, 235, 193, 0.95) 0px, rgba(254, 233, 158, 0.82) 1.0px, transparent 1.6px);
+  background-size: 240px 167px, 280px 149px, 220px 127px;
+  animation: themeParticlesSeamlessUpB 10s linear infinite !important;
+  animation-delay: -3s !important;
+  opacity: 0.68 !important;
+  filter: none !important;
+}
+
+
+
+/* 6. 风主题 (Feng) - 上升 - 羽毛形状 */
+.theme-feng .container::before {
+  transform: scale(0.9) !important;
+  transform-origin: 50% 50% !important;
+  inset: -15% !important;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 450 229'%3E%3Cg transform='translate(42,90)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' dur='4.2s' repeatCount='indefinite' values='-18 0 0; 22 0 0; -18 0 0' keyTimes='0; 0.5; 1'/%3E%3Cpath fill='rgb(136, 211, 198)' stroke='rgba(107, 204, 178, 0.58)' stroke-width='0.65' d='M0,-8 C5.5,-2 5.5,3 3.5,7 L3.5,10 L2,8 C0,3 0,-2 0,-8Z'/%3E%3Cpath stroke='rgb(55, 200, 173)' stroke-width='0.7' fill='none' d='M0,-8 C3,-3 3,3 3,10'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 257'%3E%3Cg transform='translate(107,120)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' dur='5.4s' repeatCount='indefinite' values='-22 0 0; 14 0 0; -22 0 0' keyTimes='0; 0.5; 1'/%3E%3Cpath fill='rgb(161, 222, 216)' d='M0,-5 C4.5,-3 4.5,0 1.5,4 L1.5,6 L0,4 C-1,0 -1,-3 0,-5Z'/%3E%3Cpath stroke='rgb(166, 203, 188)' stroke-width='0.6' fill='none' d='M0,-5 C2,-2 1,2 1,6'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size: 450px 229px, 480px 257px;
+  animation: themeParticlesSeamlessUpA 18s linear infinite !important;
+  opacity: 0.68 !important;
+  filter: blur(0.15px) !important;
+}
+.theme-feng .container::after {
+  transform: scale(0.8) !important;
+  transform-origin: 50% 50% !important;
+  inset: -15% !important;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 440 167'%3E%3Cg transform='translate(53,55)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' dur='4.5s' repeatCount='indefinite' values='-20 0 0; 22 0 0; -20 0 0' keyTimes='0; 0.5; 1'/%3E%3Cpath fill='rgba(255, 255, 255, 0.76)' stroke='rgba(107, 204, 178, 0.58)' stroke-width='0.65' d='M0,-8 C-5.5,-2 -5.5,3 -3.5,7 L-3.5,10 L-2,8 C0,3 0,-2 0,-8Z'/%3E%3Cpath stroke='rgb(55, 200, 173)' stroke-width='0.7' fill='none' d='M0,-8 C-3,-3 -3,3 -3,10'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 410 149'%3E%3Cg transform='translate(271,75)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' dur='5s' repeatCount='indefinite' values='-15 0 0; 28 0 0; -15 0 0' keyTimes='0; 0.5; 1'/%3E%3Cpath fill='rgb(136, 211, 198)' d='M0,-5 C4.5,-3 4.5,0 1.5,4 L1.5,6 L0,4 C-1,0 -1,-3 0,-5Z'/%3E%3Cpath stroke='rgb(166, 203, 188)' stroke-width='0.6' fill='none' d='M0,-5 C2,-2 1,2 1,6'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size: 440px 167px, 410px 149px;
+  animation: themeParticlesSeamlessUpB 22s linear infinite !important;
+  animation-delay: -5s !important;
+  opacity: 0.58 !important;
+  filter: blur(0.2px) !important;
+}
+
+/* ═════════════════════════════════════════════════════════
+   高级暗黑/黑夜模式系统 (Universal Premium Dark Mode)
+   ═════════════════════════════════════════════════════════ */
+
+.app-shell.dark {
+  background-color: #0c0c10 !important;
+  color: #E6E6EB !important;
+}
+
+/* 动态暗黑模式变量：自动基于各个主题的主色调进行15%的不透明夜空极光渐变 */
+.app-shell.dark :root, .app-shell.dark {
+  --page-bg: linear-gradient(180deg, rgba(var(--primary-rgb), 0.14) 0%, #0c0c10 80%) !important;
+  --primary-light: rgba(var(--primary-rgb), 0.11) !important;
+}
+
+/* 常规面板与卡牌的暗黑化（半透明磨砂质地，能隐约透出底层极光粒子，氛围极佳） */
+.app-shell.dark .tool-card {
+  background: rgba(18, 18, 26, 0.93) !important;
+  border-color: rgba(var(--primary-rgb), 0.35) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.22), 0 2px 6px rgba(var(--primary-rgb), 0.08) !important;
+}
+.app-shell.dark .tool-card:active {
+  background: rgba(30, 30, 42, 0.93) !important;
+}
+
+/* 文字色彩黑夜清洗 */
+.app-shell.dark .card-name {
+  color: #E1E1E6 !important;
+}
+.app-shell.dark .main-card,
+.app-shell.dark .help-popup,
+.app-shell.dark .theme-popup {
+  background-color: #15151e !important;
+  color: #D6D6DF !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.36) !important;
+}
+.app-shell.dark .theme-btn {
+  background-color: #181824 !important;
+}
+
+/* 导航、文本及副标题 */
+.app-shell.dark .page-title,
+.app-shell.dark .hd-title,
+.app-shell.dark .detail-title,
+.app-shell.dark .help-popup-title,
+.app-shell.dark .theme-popup-title {
+  color: #FFFFFF !important;
+}
+.app-shell.dark .page-subtitle,
+.app-shell.dark .hd-slogan,
+.app-shell.dark .mode-label {
+  color: #8E8E9F !important;
+}
+
+/* 输入框黑夜美化 */
+.app-shell.dark .input-field {
+  background-color: #1e1e2b !important;
+  border-color: #2c2c3c !important;
+  color: #FFFFFF !important;
+}
+
+/* 侧边栏黑夜美化 */
+.app-shell.dark .sidebar {
+  background-color: #08080c !important;
+  border-right-color: #161622 !important;
+}
+.app-shell.dark .sidebar-title {
+  color: #FFFFFF !important;
+}
+.app-shell.dark .sidebar-label {
+  color: #8E8E9F !important;
+}
+.app-shell.dark .sidebar-item:hover {
+  background: rgba(var(--primary-rgb), 0.12) !important;
+}
+
+/* 分割线和弹窗切换项 */
+.app-shell.dark .theme-divider,
+.app-shell.dark .gua-divider,
+.app-shell.dark .divider {
+  background-color: #242435 !important;
+}
+.app-shell.dark .mode-btns {
+  background-color: #1c1c28 !important;
+}
+.app-shell.dark .mode-btn-day.active {
+  background-color: #2a2a3c !important;
+  color: #FFFFFF !important;
+}
+
+/* 卦签展示及AI */
+.app-shell.dark .qian-result,
+.app-shell.dark .result-box,
+.app-shell.dark .result-detail,
+.app-shell.dark .hex-display {
+  background: rgba(20, 20, 28, 0.90) !important;
+  border-color: rgba(var(--primary-rgb), 0.38) !important;
+  outline-color: rgba(var(--primary-rgb), 0.04) !important;
+}
+.app-shell.dark .q-tab {
+  color: #7E7E8F !important;
+}
+.app-shell.dark .q-tab-on {
+  color: var(--primary) !important;
+}
+.app-shell.dark .help-popup-close {
+  color: #8E8E9F !important;
+}
+.app-shell.dark .interp-box {
+  background: #1c1c28 !important;
+}
+.app-shell.dark .interp-text {
+  color: #C0C0CB !important;
+}
+.app-shell.dark .ai-bubble {
+  background: #1c1c28 !important;
+  color: #E6E6EB !important;
+}
+.app-shell.dark .user-bubble {
+  background: var(--primary) !important;
+  color: #FFFFFF !important;
+}
+.app-shell.dark .deck-card,
+.app-shell.dark .shuffle-card,
+.app-shell.dark .picked-card,
+.app-shell.dark .leno-card-img-wrap {
+  background-color: #12121a !important;
+  border-color: rgba(var(--primary-rgb), 0.35) !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ── 命理通用高能效3图层无缝运动动画关键帧 (完全在 GPU 合成线程运行，CPU 零开销) ── */
+
+/* A. 粒子向上升腾关键帧 */
+@keyframes themeParticlesSeamlessUpA {
+  0% { background-position: 46px 33px, 91px 57px, 176px 18px; }
+  25% { background-position: 56px -24px, 101px -7px, 186px -40px; }
+  50% { background-position: 36px -81px, 81px -71px, 166px -98px; }
+  75% { background-position: 56px -139px, 101px -135px, 186px -157px; }
+  100% { background-position: 46px -196px, 91px -200px, 176px -215px; }
+}
+@keyframes themeParticlesSeamlessUpB {
+  0% { background-position: 49px 28px, 31px 19px, 76px 73px; }
+  25% { background-position: 41px -13px, 23px -18px, 68px 41px; }
+  50% { background-position: 57px -55px, 39px -55px, 84px 9px; }
+  75% { background-position: 41px -97px, 23px -92px, 68px -22px; }
+  100% { background-position: 49px -139px, 31px -130px, 76px -54px; }
+}
+
+/* B. 粒子向下降落关键帧 */
+@keyframes themeParticlesSeamlessDownA {
+  0% { background-position: 46px 33px, 91px 57px, 176px 18px; }
+  25% { background-position: 46px 90px, 81px 121px, 166px 76px; }
+  50% { background-position: 46px 147px, 101px 185px, 186px 134px; }
+  75% { background-position: 46px 205px, 81px 249px, 166px 193px; }
+  100% { background-position: 46px 262px, 91px 314px, 176px 251px; }
+}
+@keyframes themeParticlesSeamlessDownB {
+  0% { background-position: 49px 28px, 31px 19px, 76px 73px; }
+  25% { background-position: 50px 69px, 39px 56px, 84px 104px; }
+  50% { background-position: 49px 111px, 23px 93px, 68px 136px; }
+  75% { background-position: 50px 153px, 39px 130px, 84px 168px; }
+  100% { background-position: 49px 195px, 31px 168px, 76px 200px; }
+}
+
+/* ===== Gesture Mode Toggle Button ===== */
+.gesture-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: auto !important; /* 💡 宽度自适应文字 */
+  height: 28px !important;
+  padding: 0 9px !important; /* 💡 左右内边距，呈现精致的圆角矩形 */
+  margin: 0 !important;
+  line-height: 26px !important;
+  background: var(--primary-light) !important;
+  border: 1px solid var(--primary) !important;
+  border-radius: 10px !important; /* 💡 还原为和首页主题按钮一模一样的 10px 圆角矩形 */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11px !important;
+  font-weight: bold;
+  color: var(--primary) !important;
+  z-index: 100;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: all 0.2s ease-in-out;
+}
+.gesture-btn.active {
+  background: var(--primary) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.6) !important;
+}
+
+.gesture-theme-btn {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  padding: 4px 9px;
+  background: #FFFFFF;
+  border: 1px solid var(--primary);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+}
+.gesture-theme-btn.active {
+  background: var(--primary);
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.4);
+}
+
+
