@@ -88,9 +88,25 @@ body {
   margin: 0 auto;
   align-self: center;
   background: #F8F8FA;
+  /* Use modern viewport units to avoid mobile browser chrome causing extra scroll */
   min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
   position: relative;
   padding-bottom: 56px; /* reserve space for fixed TabBar */
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+  Prevent "scrollable blank space" on mobile:
+  Many pages declare `.container { min-height: 100vh; }` in scoped styles.
+  Inside `.page-wrap` (which already accounts for the fixed TabBar), that forces
+  the page to exceed the visible area. We let the router-view content flex-fill.
+*/
+.page-wrap > .container {
+  flex: 1;
+  min-height: 0 !important;
 }
 
 /* ── Desktop (≥768px): sidebar + content ── */
@@ -118,6 +134,8 @@ body {
     flex: 1;
     background: #EFEFEF;
     min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
     align-self: stretch; /* 👈 重置为高度拉伸，彻底干掉因垂直居中产生的大片下方空白 */
     padding-bottom: 0;
   }

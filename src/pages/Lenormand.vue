@@ -199,9 +199,16 @@ function onShuffleMove(e){
 function onShuffleEnd(){shuffleDir=0;shuffleGestureCounted=false;if(shuffleCount.value>=3 && !shuffleCompleteTimer){shuffleCompleteTimer=setTimeout(()=>{shuffleCompleteTimer=null;showSpread()},400)}}
 function scrollFanIntoView() {
   requestAnimationFrame(() => {
-    if (fanWrapRef.value && typeof fanWrapRef.value.scrollIntoView === 'function') {
-      fanWrapRef.value.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
+    if (!fanWrapRef.value || typeof fanWrapRef.value.scrollIntoView !== 'function') return
+
+    // If users can already see the fan area (common on mobile), don't auto-scroll.
+    const r = fanWrapRef.value.getBoundingClientRect()
+    const vh = window.innerHeight || document.documentElement.clientHeight || 0
+    const visibleH = Math.min(r.bottom, vh) - Math.max(r.top, 0)
+    const ratio = (visibleH > 0 && r.height > 0) ? (visibleH / r.height) : 0
+    if (ratio >= 0.15) return
+
+    fanWrapRef.value.scrollIntoView({ behavior: 'smooth', block: 'center' })
   })
 }
 

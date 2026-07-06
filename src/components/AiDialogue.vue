@@ -248,7 +248,10 @@ async function streamFromApi({ mode }) {
   })
 
   if (!resp.ok) {
-    const err = await resp.json().catch(() => null)
+    const err = await resp.json().catch(async () => {
+      const text = await resp.text().catch(() => '')
+      return text ? { error: text } : null
+    })
     const msg = err?.message || err?.error || `请求失败(${resp.status})`
     throw new Error(msg)
   }

@@ -50,6 +50,35 @@ let domObserver = null
 let lastScrolledEl = null
 let hasScrolledThisPage = false
 
+function isInViewport(el, { threshold = 0.15 } = {}) {
+  if (!el || typeof el.getBoundingClientRect !== 'function') return false
+  const r = el.getBoundingClientRect()
+  const vh = window.innerHeight || document.documentElement.clientHeight || 0
+  const vw = window.innerWidth || document.documentElement.clientWidth || 0
+  if (vh <= 0 || vw <= 0) return false
+
+  const visibleH = Math.min(r.bottom, vh) - Math.max(r.top, 0)
+  const visibleW = Math.min(r.right, vw) - Math.max(r.left, 0)
+  if (visibleH <= 0 || visibleW <= 0) return false
+
+  const area = Math.max(r.width, 0) * Math.max(r.height, 0)
+  if (area <= 0) return false
+
+  const visibleArea = visibleH * visibleW
+  return visibleArea / area >= threshold
+}
+
+function scrollIntoViewIfNeeded(el, { block = 'end', behavior = 'smooth', threshold = 0.15 } = {}) {
+  if (!el) return false
+  // If users can already see the result on mobile, don't auto-scroll.
+  if (isInViewport(el, { threshold })) return false
+  if (typeof el.scrollIntoView === 'function') {
+    el.scrollIntoView({ behavior, block })
+    return true
+  }
+  return false
+}
+
 const pointerX = ref(window.innerWidth / 2)
 const pointerY = ref(window.innerHeight / 2)
 const isPointerDown = ref(false)
@@ -185,6 +214,16 @@ async function initMediaPipe() {
     return
   }
 
+  // 💡 If camera APIs are unavailable (common in some in-app browsers / non-HTTPS), abort early.
+  if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+    showToast('当前环境不支持摄像头(getUserMedia)。请用系统浏览器打开，并使用 https 访问。')
+    return
+  }
+  if (typeof window.isSecureContext === 'boolean' && !window.isSecureContext) {
+    showToast('手势需要安全上下文：请用 https（或 localhost）打开页面。')
+    return
+  }
+
   // 💡 如果摄像头和手势引擎已经在正常运行中，直接返回，避免重复初始化造成硬件冲突和画面卡死
   if (cameraTracker && handsTracker) {
     return
@@ -229,7 +268,7 @@ async function initMediaPipe() {
         },
         width: 320,
         height: 240,
-        facingMode: 'user' 
+        facingMode: 'user'
       })
 
       await cameraTracker.start()
@@ -472,7 +511,7 @@ watch(() => store.isGesture, (newVal) => {
 
 watch(() => route.path, (newPath) => {
   lastScrolledEl = null
-hasScrolledThisPage = false
+  hasScrolledThisPage = false
   if (newPath === '/history') {
     stopTracking()
   } else if (store.isGesture) {
@@ -485,20 +524,30 @@ hasScrolledThisPage = false
 onMounted(() => {
   // Watch DOM additions and transitions to automatically scroll results into view center!
   domObserver = new MutationObserver(() => {
-    const target = document.querySelector('.result-box, .result-detail, .qian-result, .hex-display, .book-open-wrap, .interp-box, .gua-result-card')
+    const targetSelector = '.result-box, .result-detail, .qian-result, .hex-display, .book-open-wrap, .interp-box, .gua-result-card'
+    const target = document.querySelector(targetSelector)
 
     if (target) {
       // 💡 核心防御：如果还没滚过，立刻发起单次平滑对齐，并锁死标记，防止后续打字流高频轰炸
       if (!hasScrolledThisPage) {
+        // 如果结果本来就在视口里（尤其是手机端），不要强行自动滚动。
+        if (isInViewport(target, { threshold: 0.15 })) {
+          hasScrolledThisPage = true
+          lastScrolledEl = target
+          return
+        }
+
         hasScrolledThisPage = true
         lastScrolledEl = target
         setTimeout(() => {
           // Check again inside timeout to prevent erroring on fast page transitions
-          const targetSelector = '.result-box, .result-detail, .qian-result, .hex-display, .book-open-wrap, .interp-box, .gua-result-card'
           const currentTarget = document.querySelector(targetSelector)
           if (currentTarget) {
-            currentTarget.scrollIntoView({ behavior: 'smooth', block: 'end' })
-            setTimeout(() => {window.scrollBy({ top: 50, behavior: 'smooth' })}, 200)
+            const didScroll = scrollIntoViewIfNeeded(currentTarget, { behavior: 'smooth', block: 'end', threshold: 0.15 })
+            // Keep a small extra nudge only when we actually scrolled.
+            if (didScroll) {
+              setTimeout(() => { window.scrollBy({ top: 50, behavior: 'smooth' }) }, 200)
+            }
           }
         }, 180)
       }
