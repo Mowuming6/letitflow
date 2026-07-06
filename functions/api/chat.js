@@ -168,17 +168,17 @@ async function incrementQuota({ env, uid, day }) {
       return { used: 1, remaining: DAILY_LIMIT - 1, limit: DAILY_LIMIT }
     }
 
-    const row = await env.DB
+    // Avoid SQLite RETURNING to keep D1 compatibility.
+    await env.DB
       .prepare(
         `UPDATE ai_quota
          SET count = count + 1, updated_at = ?3
-         WHERE uid = ?1 AND day = ?2
-         RETURNING count;`
+         WHERE uid = ?1 AND day = ?2;`
       )
       .bind(uid, day, now)
-      .first()
+      .run()
 
-    const used = Number(row?.count || cur + 1)
+    const used = cur + 1
     return { used, remaining: Math.max(0, DAILY_LIMIT - used), limit: DAILY_LIMIT }
   }
 
@@ -315,73 +315,79 @@ export async function onRequestPost(context) {
     const { readable, writable } = new TransformStream()
     const writer = writable.getWriter()
 
-    // Fire meta event first
-    await sseWrite(writer, {
-      event: 'meta',
-      data: { remaining: quota.remaining, limit: quota.limit, day },
-    })
-
-    // Parse OpenAI-style SSE from upstream and forward as text chunks.
-    const reader = upstream.body.getReader()
-    const decoder = new TextDecoder('utf-8')
-    let buf = ''
-
-    while (true) {
-      const { value, done } = await reader.read()
-      if (done) break
-      buf += decoder.decode(value, { stream: true })
-
-      // Process complete SSE events separated by \n\n
-      let idx
-      while ((idx = buf.indexOf('\n\n')) !== -1) {
-        const rawEvent = buf.slice(0, idx)
-        buf = buf.slice(idx + 2)
-
-        const lines = rawEvent.split('\n')
-        for (const line of lines) {
-          const t = line.trim()
-          if (!t.startsWith('data:')) continue
-          const dataStr = t.slice(5).trim()
-          if (!dataStr) continue
-          if (dataStr === '[DONE]') {
-            await sseWrite(writer, { event: 'done', data: { remaining: quota.remaining, limit: quota.limit, day } })
-            await writer.close()
-            return new Response(readable, {
-              headers: {
-                'content-type': 'text/event-stream; charset=utf-8',
-                'cache-control': 'no-cache',
-                ...(setCookie ? { 'set-cookie': setCookie } : {}),
-              },
-            })
-          }
-
-          let parsed
-          try {
-            parsed = JSON.parse(dataStr)
-          } catch {
-            continue
-          }
-
-          const delta = parsed?.choices?.[0]?.delta?.content
-          const full = parsed?.choices?.[0]?.message?.content
-          const piece = typeof delta === 'string' ? delta : typeof full === 'string' ? full : ''
-          if (piece) {
-            await sseWrite(writer, { event: null, data: piece })
-          }
-        }
-      }
+    // Return the SSE response immediately; stream work continues in waitUntil.
+    const headers = {
+      'content-type': 'text/event-stream; charset=utf-8',
+      'cache-control': 'no-cache',
+      connection: 'keep-alive',
+      ...(setCookie ? { 'set-cookie': setCookie } : {}),
     }
 
-    await sseWrite(writer, { event: 'done', data: { remaining: quota.remaining, limit: quota.limit, day } })
-    await writer.close()
+    context.waitUntil((async () => {
+      try {
+        // Fire meta event first
+        await sseWrite(writer, {
+          event: 'meta',
+          data: { remaining: quota.remaining, limit: quota.limit, day },
+        })
 
-    return new Response(readable, {
-      headers: {
-        'content-type': 'text/event-stream; charset=utf-8',
-        'cache-control': 'no-cache',
-        ...(setCookie ? { 'set-cookie': setCookie } : {}),
-      },
-    })
+        // Parse OpenAI-style SSE from upstream and forward as text chunks.
+        const reader = upstream.body.getReader()
+        const decoder = new TextDecoder('utf-8')
+        let buf = ''
+
+        while (true) {
+          const { value, done } = await reader.read()
+          if (done) break
+          buf += decoder.decode(value, { stream: true })
+
+          // Process complete SSE events separated by \n\n
+          let idx
+          while ((idx = buf.indexOf('\n\n')) !== -1) {
+            const rawEvent = buf.slice(0, idx)
+            buf = buf.slice(idx + 2)
+
+            const lines = rawEvent.split('\n')
+            for (const line of lines) {
+              const t = line.trim()
+              if (!t.startsWith('data:')) continue
+              const dataStr = t.slice(5).trim()
+              if (!dataStr) continue
+
+              if (dataStr === '[DONE]') {
+                await sseWrite(writer, { event: 'done', data: { remaining: quota.remaining, limit: quota.limit, day } })
+                return
+              }
+
+              let parsed
+              try {
+                parsed = JSON.parse(dataStr)
+              } catch {
+                continue
+              }
+
+              const delta = parsed?.choices?.[0]?.delta?.content
+              const full = parsed?.choices?.[0]?.message?.content
+              const piece = typeof delta === 'string' ? delta : typeof full === 'string' ? full : ''
+              if (piece) {
+                await sseWrite(writer, { event: null, data: piece })
+              }
+            }
+          }
+        }
+
+        await sseWrite(writer, { event: 'done', data: { remaining: quota.remaining, limit: quota.limit, day } })
+      } catch (e) {
+        // Make sure the client sees something useful rather than a silent abort.
+        const msg = String(e?.message || e)
+        await sseWrite(writer, { event: null, data: `\n\n⚠️ 服务端错误：${msg}` })
+        await sseWrite(writer, { event: 'done', data: { remaining: quota.remaining, limit: quota.limit, day } })
+      } finally {
+        try { await writer.close() } catch {}
+      }
+    })())
+
+    return new Response(readable, { headers })
   } catch (err) {
     return json({ error: 'INTERNAL_ERROR', message: String(err?.message || err) }, { status: 500 })
   }
