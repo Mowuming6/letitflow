@@ -21,7 +21,7 @@ function setDialogOriginFromElement(el) {
 }
 
 window.addEventListener('pointerdown', (e) => {
-  const trigger = e.target?.closest?.('.help-btn, .theme-btn')
+  const trigger = e.target?.closest?.('.help-btn, .theme-btn, .gesture-theme-btn')
   if (trigger) setDialogOriginFromElement(trigger)
 }, true)
 

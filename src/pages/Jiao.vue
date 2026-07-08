@@ -17,6 +17,7 @@
 1.选择安静的环境，保持心神专一，不可在酒后或心怀戏谑时进行，清晰报上姓名、年龄、住址，说明想请示的事情，一次只问一件事。
 2.禀报完毕后，等约10秒钟，给神明"思考"的时间。
 3.点击按钮或使用手指投掷出圣杯，根据落地后的形态判断神明的回应。
+4.【手势】：开启手势后，在镜头前【上下挥动手掌】，即可抛动圣杯。【握拳】可重新开始。
 
 答案仅供参考，最终决定永远由你自己做出。</span>
         </div>
@@ -95,8 +96,8 @@ let W=1,H=1,dpr=2,idleT=0
 let snapT=0,snapStart=null,snapTarget=null,snapResult=null
 let prevTime=null
 const cups = [
-  {ox:-0.85,side:1,ax:0,ay:0,az:-Math.PI/2,vax:0,vay:0,vaz:0,posY:0,velY:0,bounces:0,isUp:true},
-  {ox:0.85,side:-1,ax:0,ay:0,az:Math.PI/2,vax:0,vay:0,vaz:0,posY:0,velY:0,bounces:0,isUp:true},
+  {ox:-0.85,side:1,ax:-Math.PI/2,ay:0,az:-Math.PI/2,vax:0,vay:0,vaz:0,posY:0,velY:0,bounces:0,isUp:true},
+  {ox:0.85,side:-1,ax:-Math.PI/2,ay:0,az:Math.PI/2,vax:0,vay:0,vaz:0,posY:0,velY:0,bounces:0,isUp:true},
 ]
 let tsStart=null,tsLast=null,tsTime=0
 
@@ -162,8 +163,8 @@ function render(){
 
 function update(dt){
   const p=phase.value
-  if(p==='idle'){ idleT+=dt;cups.forEach((cup,i)=>{ cup.az=cup.side>0?-Math.PI/2:Math.PI/2;cup.ay=0;cup.ax=Math.sin(idleT*0.35+i*1.5)*0.05;cup.posY=0 }) }
-  else if(p==='done'){ idleT+=dt;cups.forEach((cup,i)=>{ cup.ax=Math.sin(idleT*0.2+i)*0.02 }) }
+  if(p==='idle'){ idleT+=dt;cups.forEach((cup,i)=>{ cup.ax=-Math.PI/2;cup.ay=0;cup.az=cup.side>0?-Math.PI/2:Math.PI/2;cup.posY=0 }) }
+  else if(p==='done'){ idleT+=dt;cups.forEach((cup,i)=>{ cup.ax=0 }) }
   else if(p==='throw'||p==='bounce'){
     let allDone=true
     cups.forEach(cup=>{ cup.ax+=cup.vax*dt;cup.ay+=cup.vay*dt;cup.az+=cup.vaz*dt;cup.velY-=18*dt;cup.posY+=cup.velY*dt

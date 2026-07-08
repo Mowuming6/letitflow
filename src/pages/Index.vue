@@ -1,7 +1,7 @@
 <template>
   <div class="container" :style="themeStyle">
     <div class="header">
-      <div class="gesture-theme-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</div>
+      <div class="gesture-theme-btn" :class="{ 'active': store.isGesture }" @click="toggleGesture">手势</div>
       <span class="hd-title">不必纠结<span class="hd-gold"> 听天意</span></span>
       <span class="hd-slogan">把纠结交给随机，把勇气留给自己</span>
       <div class="theme-btn" @click="showThemePicker = true">主题</div>
@@ -126,17 +126,47 @@
               <span class="theme-name" :style="`color:${item.key === store.themeKey ? item.primary : '#333'}`">{{ item.name }}</span>
             </div>
           </div>
-          <!-- 💡 昼夜切换间隔线 -->
-          <div class="theme-divider"></div>
-          <!-- 💡 昼夜切换选择器 -->
-          <div class="mode-toggle-row">
-            <span class="mode-label">昼夜模式</span>
-            <div class="mode-switch" :class="{ 'is-dark': store.isDark }" @click="store.setDark(!store.isDark)">
-              <span class="mode-switch-text">昼</span>
-              <span class="mode-switch-text">夜</span>
-              <div class="mode-switch-thumb"></div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 手势说明及教学弹窗 -->
+    <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
+      <div v-if="showGestureHelp" class="help-mask" @click.self="showGestureHelp = false">
+        <div class="help-popup" style="width: min(88vw, 420px); max-height: 80vh;">
+          <div class="help-popup-close" @click="showGestureHelp = false">×</div>
+          <div class="help-popup-title">手势互动教学说明</div>
+          <div class="help-popup-content" style="font-size: 13.5px; line-height: 1.6; color: #444;">
+            <p style="margin-bottom: 12px; color: #666; font-size: 13px; text-align: center;">开启手势后，可通过前置摄像头进行非接触式悬空互动。<br/>请确保环境光线充足，并将手部完整伸向摄像头。</p>
+
+            <div style="margin-bottom: 12px;">
+              <strong style="color: var(--primary);">✨ 全局通用手势：</strong>
+              <div style="padding-left: 10px; margin-top: 5px; display: flex; flex-direction: column; gap: 6px;">
+                <div><b>移动光标：</b>伸出【食指☝️】或【张开手掌✋】在镜头前移动，可控制屏幕上的手势光标。</div>
+                <div><b>点击确认：</b>将光标悬停在卡片或按钮上，【握拳✊】即可触发点击动作。</div>
+                <div><b>返回首页：</b>随时在镜头前比出【剪刀手✌️】，即可从任意页面一键返回首页。</div>
+              </div>
+            </div>
+
+            <div>
+              <strong style="color: var(--primary);">👋 各页面互动手势：</strong>
+              <div style="padding-left: 10px; margin-top: 5px; display: flex; flex-direction: column; gap: 8px;">
+                <div>
+                  <br/><b>每日运势 / 骰子之神 / 命运硬币 / 命运转盘 / 掷圣杯 / 六爻金钱卦：</b>
+                  <span style="display: block; padding-left: 4px; margin-top: 2px;">【上下挥手掌✋】，即可投掷/起卦。<br/>【握拳✊】触发重新占卜。</span>
+                </div>
+                <div>
+                  <br/><b>观音灵签 / 答案之书：</b>
+                  <span style="display: block; padding-left: 4px; margin-top: 2px;">【左右挥手掌✋】，即可抽签/翻书。<br/>【握拳✊】触发重新占卜。</span>
+                </div>
+                <div>
+                  <br/><b>塔罗占卜 / 雷诺曼占卜：</b>
+                  <span style="display: block; padding-left: 4px; margin-top: 2px;">【握拳✊】，开始洗牌；<br/>【左右挥手掌✋】即可洗牌；<br/>选牌界面，【左右挥手掌✋】可左右滑动牌区，伸出【食指☝️】可在当前牌区选牌，食指在某牌上停留超过3秒即可选中该牌。<br/>【握拳✊】触发重新占卜。</span>
+                </div>
+              </div>
             </div>
           </div>
+          <button class="btn-gold" style="margin-top: 14px; height: 40px; border-radius: 20px; flex-shrink: 0;" @click="enableGestureAndClose">开启手势</button>
         </div>
       </div>
     </Transition>
@@ -144,7 +174,7 @@
 </template>
 
 <script setup>
-import { themeCurtainBeforeEnter, themeCurtainEnter, themeCurtainLeave } from '../composables/useCurtainMotion.js'
+import { themeCurtainBeforeEnter, themeCurtainEnter, themeCurtainLeave, helpCurtainBeforeEnter, helpCurtainEnter, helpCurtainLeave } from '../composables/useCurtainMotion.js'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { store } from '../store.js'
@@ -152,6 +182,7 @@ import { THEMES } from '../theme.js'
 
 const router = useRouter()
 const showThemePicker = ref(false)
+const showGestureHelp = ref(false)
 
 const themeStyle = computed(() => store.getThemeStyle())
 const iconDir = computed(() => store.getThemeIconDir())
@@ -161,6 +192,19 @@ const themeList = Object.entries(THEMES).map(([key, t]) => ({
 }))
 
 function goto(path) { router.push(path) }
+
+function toggleGesture() {
+  if (!store.isGesture) {
+    showGestureHelp.value = true
+  } else {
+    store.setGesture(false)
+  }
+}
+
+function enableGestureAndClose() {
+  store.setGesture(true)
+  showGestureHelp.value = false
+}
 
 function selectTheme(key) {
   store.setTheme(key)

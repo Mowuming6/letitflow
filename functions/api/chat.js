@@ -3,7 +3,7 @@
 // - Enforces anonymous daily quota (default: 5/day)
 // - Streams response as SSE: text chunks + meta/done events
 
-const DAILY_LIMIT = 5
+const DAILY_LIMIT = 10
 const UID_COOKIE = 'lf_uid'
 
 function json(data, init = {}) {

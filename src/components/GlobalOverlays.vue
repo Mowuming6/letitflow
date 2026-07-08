@@ -528,22 +528,13 @@ onMounted(() => {
     const target = document.querySelector(targetSelector)
 
     if (target) {
-      // 💡 核心防御：如果还没滚过，立刻发起单次平滑对齐，并锁死标记，防止后续打字流高频轰炸
-      if (!hasScrolledThisPage) {
-        // 如果结果本来就在视口里（尤其是手机端），不要强行自动滚动。
-        if (isInViewport(target, { threshold: 0.15 })) {
-          hasScrolledThisPage = true
-          lastScrolledEl = target
-          return
-        }
-
-        hasScrolledThisPage = true
+      if (lastScrolledEl !== target) {
         lastScrolledEl = target
         setTimeout(() => {
           // Check again inside timeout to prevent erroring on fast page transitions
           const currentTarget = document.querySelector(targetSelector)
           if (currentTarget) {
-            const didScroll = scrollIntoViewIfNeeded(currentTarget, { behavior: 'smooth', block: 'end', threshold: 0.15 })
+            const didScroll = scrollIntoViewIfNeeded(currentTarget, { behavior: 'smooth', block: 'end', threshold: 0.75 })
             // Keep a small extra nudge only when we actually scrolled.
             if (didScroll) {
               setTimeout(() => { window.scrollBy({ top: 50, behavior: 'smooth' }) }, 200)
@@ -553,7 +544,6 @@ onMounted(() => {
       }
     } else {
       // 💡 用户重置了结果（点击了“再次占卜/起卦”），我们自动恢复滚动权限，准备迎接下一次结果！
-      hasScrolledThisPage = false
       lastScrolledEl = null
     }
   })

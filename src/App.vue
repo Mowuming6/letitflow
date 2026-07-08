@@ -1,5 +1,5 @@
 <template>
-  <div class="app-shell" :class="[`theme-${store.themeKey}`, store.isDark ? 'dark' : '']">
+  <div class="app-shell" :class="[`theme-${store.themeKey}`, store.isDark ? 'dark' : '']" :style="themeStyle">
     <!-- Desktop sidebar (hidden on mobile via CSS) -->
     <aside class="sidebar" :style="themeStyle">
       <div class="sidebar-brand">

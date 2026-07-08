@@ -21,7 +21,8 @@
 如何使用：
 1.选择安静的环境，保持心神专一，默念想要询问的问题。问题要具体明确，时间范围建议在3个月至1年以内，避免长期预测。
 2.选择单牌或三牌阵，根据直觉抽出牌。
-3.根据牌或牌组解读，获得答案。
+3.【手势】：【握拳✊】，开始洗牌；【左右挥手掌✋】即可洗牌；选牌界面，【左右挥手掌✋】可左右滑动牌区，伸出【食指☝️】可在当前牌区选牌，食指在某牌上停留超过3秒即可选中该牌。【握拳✊】触发重新占卜。
+4.根据牌或牌组解读，获得答案。
 
 注意事项：不问健康生死、黄赌毒、他人隐私、具体数字时间类问题；同一个问题建议隔7天再问，反复追问会让信息混乱；尽量避开深夜11点到凌晨3点能量活跃期间；别把结果当"圣旨"，占卜是给你启示而非替你做决定。
 
@@ -206,7 +207,7 @@ function scrollFanIntoView() {
     const vh = window.innerHeight || document.documentElement.clientHeight || 0
     const visibleH = Math.min(r.bottom, vh) - Math.max(r.top, 0)
     const ratio = (visibleH > 0 && r.height > 0) ? (visibleH / r.height) : 0
-    if (ratio >= 0.15) return
+    if (ratio >= 0.85) return
 
     fanWrapRef.value.scrollIntoView({ behavior: 'smooth', block: 'center' })
   })
