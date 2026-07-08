@@ -254,7 +254,7 @@ function finishShake(){
   qianDisplayTitle.value=e['灵签'].replace(/\)$/,' · '+e['宫位']+')')
   qianPoem.value=e['灵签诗文'];qianShiyi.value=e['诗意'];qianJieyue.value=e['解曰'];qianEssence.value=e['本签精髓']
   showResult.value=true;tipText.value='再次摇动求签';activeTab.value=0;play('stickLand')
-  store.saveHistory('🛕 观音灵签',qianDisplayTitle.value,(e['整体解释']||'').slice(0,60))
+  store.saveHistory('🛕 观音灵签',qianDisplayTitle.value,question.value || '（用户未输入问题）')
 }
 function getQianResultData() {
   return {

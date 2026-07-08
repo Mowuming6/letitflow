@@ -197,7 +197,7 @@ function onDone(){
   const resultText=head?'正面（正）':'反面（反）'
   if(head)headCount.value++;else tailCount.value++
   result.value=resultText;showResult.value=true;tipText.value='再次向上滑动抛掷'
-  store.saveHistory('🪙 命运硬币',`结果：${resultText}`,`正面${headCount.value} 反面${tailCount.value}`)
+  store.saveHistory('🪙 命运硬币',`结果：${resultText}`,question.value || '（用户未输入问题）')
   phase.value='done'
 }
 

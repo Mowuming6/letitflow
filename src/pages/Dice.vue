@@ -43,8 +43,7 @@
       <Transition name="slide-fade">
         <div v-if="showResult" class="result-box">
           <div class="result-title">骰子结果：{{ diceNum }} 点</div>
-          <div v-if="resultOption" class="result-text">命运选择：<span class="highlight">{{ resultOption }}</span></div>
-          <div v-else class="result-text">{{ diceAdvice }}</div>
+          <div class="result-text">{{ diceAdvice }}</div>
         </div>
       </Transition>
     </div>
@@ -290,7 +289,7 @@ function onDone(n){
   diceNum.value=n;rolling.value=false;showResult.value=true
   diceAdvice.value=DICE_ADVICE[n];resultOption.value=opt
   tipText.value='再次向上滑动投掷'
-  store.saveHistory('🎲 骰子之神',`投出 ${n} 点`,opt||DICE_ADVICE[n])
+  store.saveHistory('🎲 骰子之神',`投出 ${n} 点`,optionText.value || '（用户未输入问题）')
 }
 </script>
 

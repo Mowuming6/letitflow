@@ -219,7 +219,7 @@ function onDone(faces){
   cups[0].isUp=c0y;cups[1].isUp=c1y
   resultEmoji.value=res.emoji;resultTitle.value=res.title;resultDesc.value=res.desc;showResult.value=true
   tipText.value='再次滑动掷杯'
-  store.saveHistory('🙏 掷圣杯',res.title,res.desc)
+  store.saveHistory('🙏 掷圣杯',res.title,question.value || '（用户未输入问题）')
 }
 </script>
 

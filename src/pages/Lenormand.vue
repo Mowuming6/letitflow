@@ -480,7 +480,7 @@ function revealCards(){
     }
     play('cardReveal');results.value=res;interpretation.value=interp;phase.value='result'
     const historyDesc=drawCount.value===1?'单牌':drawCount.value===2?'两牌展开':'三牌展开'
-    store.saveHistory('🎴 雷诺曼占卜',res.map(r=>r.name).join('·'),question.value||historyDesc)
+    store.saveHistory('🎴 雷诺曼占卜',res.map(r=>r.name).join('·'),question.value || '（用户未输入问题）')
   },res.length*520+900)
 }
 function reset(){if(fanTimerId){clearTimeout(fanTimerId);fanTimerId=null};fanCtx=null;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;results.value=[];pickedCount.value=0;shuffleCount.value=0;interpretation.value='';deckDisplay.value=Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2}));phase.value='choose'}

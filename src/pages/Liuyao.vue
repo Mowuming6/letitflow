@@ -278,7 +278,7 @@ function onAllDone(){
     }
     const liuyaoMain=guaEntry?guaEntry['卦全称']:hexName
     const liuyaoChanged=hasC&&changedGuaDisplayTitle.value?changedGuaDisplayTitle.value.split(' · ')[0]:''
-    store.saveHistory('☯ 六爻金钱卦',liuyaoChanged?`本卦：${liuyaoMain}→变卦：${liuyaoChanged}`:`本卦：${liuyaoMain}`,'')
+    store.saveHistory('☯ 六爻金钱卦',liuyaoChanged?`本卦：${liuyaoMain}→变卦：${liuyaoChanged}`:`本卦：${liuyaoMain}`,question.value || '（用户未输入问题）')
     tipText.value='卦象已成，可重新起卦'
   } else {
     tipText.value=`已摇${lines.length}爻，还需${6-lines.length}爻`

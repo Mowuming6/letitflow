@@ -289,32 +289,26 @@ async function streamFromApi({ mode }) {
         if (line.startsWith('event:')) eventName = line.slice(6).trim()
       }
 
-      for (const line of lines) {
-        if (!line.startsWith('data:')) continue
-        const data = line.slice(5)
-        const dataTrim = data.trimStart()
+      // Collect all data: lines for this SSE event
+      const dataLines = lines
+        .filter(l => l.startsWith('data:'))
+        .map(l => l.slice(5).trimStart())
 
-        if (eventName === 'meta') {
-          try {
-            const meta = JSON.parse(dataTrim)
-            store.setAiQuota(meta)
-          } catch {}
-          continue
-        }
+      if (dataLines.length === 0) continue
 
-        if (eventName === 'done') {
-          // done payload might include remaining
-          try {
-            const meta = JSON.parse(dataTrim)
-            store.setAiQuota(meta)
-          } catch {}
-          continue
-        }
-
-        // default event: plain text piece
-        aiText += dataTrim
-        flushTyping()
+      if (eventName === 'meta') {
+        try { const meta = JSON.parse(dataLines[0]); store.setAiQuota(meta) } catch {}
+        continue
       }
+
+      if (eventName === 'done') {
+        try { const meta = JSON.parse(dataLines[0]); store.setAiQuota(meta) } catch {}
+        continue
+      }
+
+      // Plain text chunk — join multiple data: lines with \n to preserve newlines
+      aiText += dataLines.join('\n')
+      flushTyping()
     }
   }
 
@@ -625,7 +619,7 @@ onMounted(() => {
 }
 
 .msg-content {
-  white-space: pre-wrap;
+  white-space: normal;
 }
 
 .msg-content :deep(strong) {

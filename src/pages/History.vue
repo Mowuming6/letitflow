@@ -36,7 +36,7 @@
 
     <!-- 历史列表 -->
     <div v-if="totalCount > 0" class="history-list">
-      <div v-for="item in filteredList" :key="item.id"
+      <div v-for="item in pagedList" :key="item.id"
         class="history-item" :class="{ selected: item.selected }"
         @click="onItemTap(item.id)">
         <div v-if="editMode" class="item-check">
@@ -55,6 +55,13 @@
         </div>
       </div>
 
+      <!-- 分页导航 -->
+      <div v-if="totalPages > 1" class="pagination-row">
+        <button class="page-btn" :disabled="currentPage === 1" @click="currentPage--">‹</button>
+        <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+        <button class="page-btn" :disabled="currentPage === totalPages" @click="currentPage++">›</button>
+      </div>
+
       <div v-if="!editMode" class="clear-row">
         <button class="btn-danger" @click="clearAll">
           🗑️ {{ activeFilter === 'all' ? '清空全部记录' : '清空' + activeFilterLabel + '记录' }}
@@ -66,7 +73,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, watchEffect } from 'vue'
 import { store } from '../store.js'
 import { showToast, showModal } from '../composables/useModal.js'
 
@@ -120,6 +127,14 @@ const historyList = ref([])
 const filteredList = ref([])
 const totalCount = ref(0)
 
+const PAGE_SIZE = 20
+const currentPage = ref(1)
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredList.value.length / PAGE_SIZE)))
+const pagedList = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE
+  return filteredList.value.slice(start, start + PAGE_SIZE)
+})
+
 function loadHistory() {
   const list = store.getHistory().map(item => ({
     ...item,
@@ -137,6 +152,7 @@ function applyFilter() {
   filteredList.value = key === 'all'
     ? historyList.value
     : historyList.value.filter(item => item.type && item.type.includes(key))
+  currentPage.value = 1
 }
 
 function onFilterTap(key) {
@@ -306,6 +322,19 @@ watch(() => store.history.length, loadHistory)
   -webkit-box-orient: vertical; overflow: hidden;
 }
 .item-time { font-size: 11px; color: #BBB; }
+.pagination-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; padding: 12px 0;
+}
+.page-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid #EBEBEB; background: #FFF;
+  font-size: 18px; color: var(--primary); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.page-btn:disabled { color: #CCC; border-color: #EEE; cursor: not-allowed; }
+.page-info { font-size: 13px; color: #888; }
 .clear-row { display: flex; justify-content: center; margin-top: 12px;margin-bottom: 25px;  }
 .btn-danger {
   background: rgba(224,92,92,0.15);

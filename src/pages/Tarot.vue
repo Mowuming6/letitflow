@@ -530,7 +530,7 @@ function revealCards(){
     if(res.length===3){const[past,present,future]=res;aiInterp=`过去：${past.name}${past.reversed?'(逆位)':''}，${past.meaning}\n现在：${present.name}${present.reversed?'(逆位)':''}，${present.meaning}\n未来：${future.name}${future.reversed?'(逆位)':''}，${future.meaning}`}
     play('cardReveal');results.value=res;aiInterpretation.value=aiInterp;phase.value='result'
     const desc=res.map(r=>r.name+'·'+(r.reversed?'逆位':'正位')).join(' - ')
-    store.saveHistory('🃏 塔罗占卜',desc,res.map(r=>r.meaning).join(' '))
+    store.saveHistory('🃏 塔罗占卜',desc,question.value || '（用户未输入问题）')
   },res.length*520+900)
 }
 function reset(){if(fanTimerId){clearTimeout(fanTimerId);fanTimerId=null};fanCtx=null;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;results.value=[];pickedCount.value=0;shuffleCount.value=0;aiInterpretation.value='';deckDisplay.value=Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2}));phase.value='choose'}
