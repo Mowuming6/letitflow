@@ -4,6 +4,7 @@
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
+      <Teleport to="body">
       <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
         <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
           <div class="help-popup">
@@ -20,8 +21,13 @@
 如何使用：
 1.选择安静的环境，保持心神专一，默念想要询问的问题。问题要具体明确，时间范围建议在3个月至1年以内，避免长期预测。
 2.选择单牌或三牌阵，根据直觉抽出牌。
-3.【手势】：【握拳✊】，开始洗牌；【左右挥手掌✋】即可洗牌；选牌界面，【左右挥手掌✋】可左右滑动牌区，伸出【食指☝️】可在当前牌区选牌，食指在某牌上停留超过3秒即可选中该牌。【握拳✊】触发重新占卜。
-4.根据牌或牌组解读，获得答案。
+3.根据牌或牌组解读，获得答案。
+
+【手势】：
+【握拳】，开始洗牌；【左右挥手掌】即可洗牌；选牌界面，【左右挥手掌】可左右滑动牌区，伸出【食指】可在当前牌区选牌，食指在某牌上停留超过3秒即可选中该牌。
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
 
 注意事项：不问健康生死、黄赌毒、他人隐私、具体数字时间类问题；同一个问题建议隔7天再问，反复追问会让信息混乱；尽量避开深夜11点到凌晨3点能量活跃期间；别把结果当"圣旨"，塔罗是给你启示而非替你做决定。
 
@@ -29,6 +35,7 @@
         </div>
       </div>
       </Transition>
+      </Teleport>
       <div class="page-title">塔罗占卜</div>
       <div class="page-subtitle">塔罗牌中意，行止在本心</div>
 
@@ -38,8 +45,8 @@
       <!-- Phase: choose -->
       <template v-if="phase === 'choose'">
         <div class="draw-count-row">
-          <div class="draw-btn" :class="{'draw-on': drawCount===1}" @click="drawCount=1">抽1张</div>
-          <div class="draw-btn" :class="{'draw-on': drawCount===3}" @click="drawCount=3">抽3张</div>
+          <div class="draw-btn" role="button" tabindex="0" :class="{'draw-on': drawCount===1}" @click="drawCount=1">抽1张</div>
+          <div class="draw-btn" role="button" tabindex="0" :class="{'draw-on': drawCount===3}" @click="drawCount=3">抽3张</div>
         </div>
         <div class="deck-display" @click="startShuffle">
           <div v-for="(d,i) in deckDisplay" :key="i" class="deck-card"
@@ -135,8 +142,9 @@ import { helpCurtainBeforeEnter, helpCurtainEnter, helpCurtainLeave } from '../c
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import AiDialogue from '../components/AiDialogue.vue'
 import { store } from '../store.js'
-import { play } from '../sound.js'
+import { play, vib } from '../sound.js'
 import { THEMES } from '../theme.js'
+import { TAROT_KEYWORDS, MAJOR, SUITS, RANKS, SUIT_PREFIX } from './tarot_data.js'
 
 const themeStyle = computed(() => store.getThemeStyle())
 const fanCanvasRef = ref(null), fanWrapRef = ref(null)
@@ -154,17 +162,6 @@ const results = ref([])
 const aiInterpretation = ref('')
 const deckDisplay = ref(Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2})))
 
-const TAROT_KEYWORDS = [
-  ['新开始 · 冒险 · 自由 · 无限可能','盲目 · 鲁莽 · 逃避 · 不负责任'],['创造力 · 显化 · 行动力 · 掌控力','拖延 · 能力不足 · 欺骗 · 浪费资源'],['直觉 · 潜意识 · 智慧 · 灵性','忽略直觉 · 迷茫 · 表里不一'],['丰盛 · 孕育 · 滋养 · 物质富足','匮乏 · 过度放纵 · 控制欲 · 停滞'],['权威 · 秩序 · 稳定 · 领导力 · 自律','专制 · 固执 · 失控 · 缺乏规划'],['传统 · 信仰 · 导师 · 规则 · 教育','叛逆 · 教条 · 伪善 · 拒绝帮助'],['爱情 · 选择 · 契合 · 合作','分手 · 抉择困难 · 背叛 · 沟通障碍'],['胜利 · 意志 · 掌控 · 突破 · 勇往直前','失控 · 挫败 · 方向迷失 · 内耗'],['勇气 · 耐心 · 内在力量 · 克制','软弱 · 恐惧 · 失控 · 缺乏耐心'],['内省 · 孤独 · 智慧 · 反思','孤立 · 逃避 · 固执 · 拒绝沟通'],['转折 · 机遇 · 好运 · 循环','厄运 · 失控 · 抗拒变化 · 错失机会'],['公平 · 因果 · 真相 · 责任 · 平衡','不公 · 逃避责任 · 偏见 · 失衡'],['牺牲 · 换位思考 · 暂停 · 新视角','拖延 · 固执 · 不愿牺牲 · 逃避反思'],['结束 · 重生 · 彻底转变 · 放手','抗拒改变 · 停滞 · 重复旧模式'],['平衡 · 调和 · 耐心 · 灵性成长','失衡 · 极端 · 急躁 · 缺乏协调'],['束缚 · 欲望 · 沉迷 · 物质主义','解脱 · 自由 · 觉醒 · 摆脱控制'],['剧变 · 崩塌 · 真相 · 解放','逃避危机 · 拖延 · 虚假稳定'],['希望 · 疗愈 · 灵感 · 平静','绝望 · 迷茫 · 失去信仰 · 自我怀疑'],['潜意识 · 幻觉 · 恐惧 · 直觉','看清真相 · 克服恐惧 · 清晰'],['成功 · 喜悦 · 活力 · 光明 · 幸福','低潮 · 自负 · 失去活力 · 隐藏问题'],['觉醒 · 重生 · 反思 · 新机会','自我否定 · 拖延 · 逃避改变'],['完成 · 成功 · 整合','未完成 · 停滞 · 局限 · 遗憾'],
-  ['新计划 · 行动力 · 灵感','犹豫 · 行动力不足 · 灵感枯竭'],['规划 · 选择 · 远见','纠结 · 短视 · 缺乏规划'],['展望 · 合作 · 进展','局限 · 合作破裂 · 停滞'],['庆祝 · 稳定 · 团聚','纷争 · 不稳定 · 分离'],['竞争 · 冲突 · 分歧','妥协 · 和解 · 避免内耗'],['胜利 · 认可 · 自信','失败 · 自卑 · 不被认可'],['坚持 · 勇气 · 防御','退缩 · 放弃 · 脆弱'],['快速 · 消息 · 进展','迟缓 · 消息受阻 · 停滞'],['警惕 · 坚持 · 防御','松懈 · 疲惫 · 放弃警惕'],['负担 · 压力 · 责任','减负 · 放下 · 轻松前行'],['新消息 · 热情 · 好奇','消息滞后 · 冷漠 · 冲动误事'],['行动 · 冒险 · 勇往直前','冲动 · 鲁莽 · 半途而废'],['自信 · 热情 · 领导力','自卑 · 冷漠 · 缺乏领导力'],['权威 · 决断 · 领导力','专制 · 优柔寡断 · 失控'],
-  ['新情感 · 爱 · 喜悦','情感匮乏 · 冷漠 · 喜悦缺失'],['和谐 · 合作 · 爱情联结','矛盾 · 对立 · 情感破裂'],['庆祝 · 友情 · 团聚','纷争 · 孤独 · 分离'],['不满 · 内省 · 冷漠','满足 · 积极 · 主动接纳'],['失落 · 悲伤 · 遗憾','放下 · 释怀 · 走出悲伤'],['怀旧 · 童真 · 治愈','沉溺过去 · 无法治愈'],['幻想 · 选择 · 迷茫','清醒 · 坚定 · 脚踏实地'],['离开 · 追寻 · 放下','留恋 · 逃避 · 不愿放下'],['满足 · 愿望达成 · 幸福','不满 · 愿望落空 · 痛苦'],['家庭幸福 · 情感富足 · 圆满','家庭纷争 · 情感匮乏 · 遗憾'],['新情感 · 温柔 · 浪漫','情感冷漠 · 冲动 · 不成熟'],['浪漫 · 温柔 · 情感表达','冷漠 · 敷衍 · 情感压抑'],['慈悲 · 直觉 · 疗愈','冷漠 · 直觉失灵 · 自私'],['成熟 · 包容 · 情感智慧','幼稚 · 狭隘 · 情感失控'],
-  ['真相 · 决断 · 新思维','谎言 · 犹豫 · 思维僵化'],['僵局 · 逃避 · 两难','突破 · 面对 · 果断抉择'],['心碎 · 悲伤 · 背叛','疗愈 · 释怀 · 重建信任'],['休息 · 疗愈 · 暂停','忙碌 · 透支 · 不愿休息'],['冲突 · 胜利 · 代价','和解 · 妥协 · 避免代价'],['过渡 · 疗愈 · 脱离困境','停滞 · 深陷困境 · 无法疗愈'],['欺骗 · 策略 · 秘密','真诚 · 坦荡 · 放弃阴谋'],['束缚 · 自我限制 · 恐惧','解脱 · 突破 · 克服恐惧'],['焦虑 · 噩梦 · 精神痛苦','平静 · 安心 · 摆脱焦虑'],['结束 · 失败 · 绝望','新生 · 希望 · 重新开始'],['消息 · 警觉 · 敏锐','消息滞后 · 迟钝 · 疏忽'],['快速 · 决断 · 直言','迟缓 · 优柔寡断 · 沉默'],['智慧 · 独立 · 冷静','愚蠢 · 依赖 · 冲动'],['理性 · 公正 · 决断','感性 · 不公 · 优柔寡断'],
-  ['新机会 · 物质 · 稳定','错失机会 · 物质匮乏 · 不稳定'],['平衡 · 灵活 · 选择','失衡 · 固执 · 无法抉择'],['合作 · 技能 · 进展','合作失败 · 技能不足 · 停滞'],['稳定 · 保守 · 掌控','挥霍 · 冒险 · 失控'],['贫穷 · 困境 · 孤立','富足 · 顺利 · 联结'],['给予 · 接受 · 平衡','吝啬 · 贪婪 · 失衡'],['等待 · 收获 · 反思','急躁 · 错失收获 · 盲目行动'],['努力 · 专注 · 勤奋','懒惰 · 分心 · 敷衍'],['富足 · 独立 · 享受成果','匮乏 · 依赖 · 无法享受'],['财富 · 家庭 · 圆满','贫穷 · 家庭不和 · 遗憾'],['学习 · 务实 · 可靠','懒惰 · 虚浮 · 不可靠'],['务实 · 努力 · 可靠','虚浮 · 懒惰 · 不可靠'],['富足 · 滋养 · 稳定','匮乏 · 冷漠 · 不稳定'],['成功 · 财富 · 权威','失败 · 贫穷 · 无权威'],
-]
-const MAJOR=[{name:'愚者',symbol:'0',color:'#f5c518'},{name:'魔术师',symbol:'I',color:'#f5c518'},{name:'女祭司',symbol:'II',color:'#f5c518'},{name:'皇后',symbol:'III',color:'#f5c518'},{name:'皇帝',symbol:'IV',color:'#f5c518'},{name:'教皇',symbol:'V',color:'#f5c518'},{name:'恋人',symbol:'VI',color:'#f5c518'},{name:'战车',symbol:'VII',color:'#f5c518'},{name:'力量',symbol:'VIII',color:'#f5c518'},{name:'隐士',symbol:'IX',color:'#f5c518'},{name:'命运之轮',symbol:'X',color:'#f5c518'},{name:'正义',symbol:'XI',color:'#f5c518'},{name:'倒吊人',symbol:'XII',color:'#f5c518'},{name:'死神',symbol:'XIII',color:'#f5c518'},{name:'节制',symbol:'XIV',color:'#f5c518'},{name:'恶魔',symbol:'XV',color:'#f5c518'},{name:'塔',symbol:'XVI',color:'#f5c518'},{name:'星星',symbol:'XVII',color:'#f5c518'},{name:'月亮',symbol:'XVIII',color:'#f5c518'},{name:'太阳',symbol:'XIX',color:'#f5c518'},{name:'审判',symbol:'XX',color:'#f5c518'},{name:'世界',symbol:'XXI',color:'#f5c518'}]
-const SUITS=[{suit:'权杖',color:'#f97316'},{suit:'圣杯',color:'#60a5fa'},{suit:'宝剑',color:'#8b5cf6'},{suit:'星币',color:'#10b981'}]
-const RANKS=['一','二','三','四','五','六','七','八','九','十','侍从','骑士','王后','国王']
-const SUIT_PREFIX=['w','c','s','p']
 const TAROT_CARDS=[]
 MAJOR.forEach((c,mi)=>TAROT_CARDS.push({name:c.name,symbol:c.symbol,color:c.color,type:'major',img:`./tarotcard/${mi}.jpeg`,origIdx:mi}))
 SUITS.forEach((s,si)=>RANKS.forEach((rank,ri)=>TAROT_CARDS.push({name:s.suit+rank,symbol:rank,color:s.color,type:'minor',img:`./tarotcard/${SUIT_PREFIX[si]}${ri+1}.jpeg`,origIdx:22+si*14+ri})))
@@ -173,7 +170,7 @@ let shuffledDeck=[], shuffleTouchX=0, shuffleDir=0, shuffleGestureCounted=false
 let shuffleCompleteTimer = null
 let fanCtx=null, fanW=1, fanH=1, fanRect=null, fanOffset=0, fanVelocity=0, fanStartX=0, fanPrevX=0, fanTimerId=null
 let pickedIndices=[], liftProgress={}, cardBackImg=null, dpr=2, fanRafPending=false, fanVibStep=0
-function getCardSize(){const w=window.innerWidth;if(w>=1200)return{w:130,h:195};if(w>=768)return{w:105,h:157};return{w:70,h:105}}
+function getCardSize(fh){const ch=(fh||400)*0.7;return{w:ch/1.5,h:ch}}
 let themeColor='#D4A853', themeGlow='rgba(212,168,83,0.75)', themeBorder='rgba(212,168,83,0.5)'
 
 function initTheme(){
@@ -249,6 +246,10 @@ function showSpread(){
 function initFanCanvas(){
   initTheme()
   const cv=fanCanvasRef.value;if(!cv)return
+  const vh=window.innerHeight||800
+  const ratio=(window.innerWidth||800)<1024?0.72*0.8*0.8:0.72
+  let newH=vh*ratio;newH=Math.max(300,Math.min(newH,560))
+  cv.style.height=newH+'px'
   const rect=cv.getBoundingClientRect();dpr=window.devicePixelRatio||2
   cv.width=rect.width*dpr;cv.height=rect.height*dpr
   fanCtx=cv.getContext('2d');fanCtx.scale(dpr,dpr)
@@ -283,7 +284,7 @@ function updateHoveredCard(clientX, clientY) {
   if (phase.value !== 'spread') { hoveredCardIdx.value = -1; return -1 }
   const rect = fanCanvasRef.value ? fanCanvasRef.value.getBoundingClientRect() : null; if (!rect) return -1
   const lx = clientX - rect.left, ly = clientY - rect.top
-  const total = TAROT_CARDS.length, cx = fanW / 2, cy = fanH + 400, R = 500, span = 3.4, { w: cw, h: ch } = getCardSize()
+  const total = TAROT_CARDS.length, { w: cw, h: ch } = getCardSize(fanH), cx = fanW / 2, cy = fanH + 500 - ch/2, R = 500, span = 3.4
   let bestIdx = -1
   for (let i = 0; i < total; i++) {
     const angle = -span / 2 + i * (span / (total - 1)) - fanOffset
@@ -407,12 +408,9 @@ function handleGestureTrigger(e) {
 }
 
 function handleGestureClick(e) {
-  if (e.detail.state === 'fist') {
-    if (phase.value === 'choose') {
-      startShuffle()
-    } else if (phase.value === 'result') {
-      reset()
-    }
+  // 仅保留「选牌阶段洗牌」手势；结果页重占改为点击「再次占卜」按钮
+  if (e.detail.state === 'fist' && phase.value === 'choose') {
+    startShuffle()
   }
 }
 
@@ -429,11 +427,13 @@ function handleCanvasMouseLeave() {
   drawFan();
 }
 
+function onPointReset() { if (phase.value === 'result') reset() }
 onMounted(() => {
   document.addEventListener('gesture-hover', handleGestureHover)
   document.addEventListener('gesture-state', handleGestureState)
   document.addEventListener('gesture-trigger', handleGestureTrigger)
   document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
 })
 
 onUnmounted(() => {
@@ -441,13 +441,14 @@ onUnmounted(() => {
   document.removeEventListener('gesture-state', handleGestureState)
   document.removeEventListener('gesture-trigger', handleGestureTrigger)
   document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
   if (fanTimerId) { clearTimeout(fanTimerId); fanTimerId = null }
 })
 
 function drawFan(){
   const ctx=fanCtx;if(!ctx)return
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,fanW,fanH)
-  const total=TAROT_CARDS.length,cx=fanW/2,cy=fanH+400,R=500,span=3.4,{w:cw,h:ch}=getCardSize(),cr=5
+  const total=TAROT_CARDS.length,{w:cw,h:ch}=getCardSize(fanH),cx=fanW/2,cy=fanH+500-ch/2,R=500,span=3.4,cr=5
   const drawRound=()=>{ctx.beginPath();ctx.moveTo(-cw/2+cr,-ch/2);ctx.lineTo(cw/2-cr,-ch/2);ctx.arcTo(cw/2,-ch/2,cw/2,-ch/2+cr,cr);ctx.lineTo(cw/2,ch/2-cr);ctx.arcTo(cw/2,ch/2,cw/2-cr,ch/2,cr);ctx.lineTo(-cw/2+cr,ch/2);ctx.arcTo(-cw/2,ch/2,-cw/2,ch/2-cr,cr);ctx.lineTo(-cw/2,-ch/2+cr);ctx.arcTo(-cw/2,-ch/2,-cw/2+cr,-ch/2,cr);ctx.closePath()}
   const items=[];for(let i=0;i<total;i++){const angle=-span/2+i*(span/(total-1))-fanOffset,y=cy-Math.cos(angle)*R;if(y+ch/2<0||y-ch/2>fanH+ch)continue;if(Math.abs(angle)>span/2+0.2)continue;items.push({i,angle})}
   items.sort((a,b)=>a.i-b.i)
@@ -488,7 +489,7 @@ function onFanTouchMove(e){
   const x=e.touches[0].clientX,dx=x-fanPrevX;fanVelocity=dx;fanPrevX=x
   fanOffset-=dx*0.0038;fanOffset=Math.max(-1.7,Math.min(1.7,fanOffset))
   if(!fanRafPending&&fanCanvasRef.value){fanRafPending=true;requestAnimationFrame(()=>{fanRafPending=false;drawFan()})}
-  const vStep=Math.round(fanOffset*25);if(vStep!==fanVibStep){fanVibStep=vStep;try{navigator.vibrate&&navigator.vibrate(12)}catch(e){};play('cardTick')}
+  const vStep=Math.round(fanOffset*25);if(vStep!==fanVibStep){fanVibStep=vStep;vib('light');play('cardTick')}
   if (store.isGesture) {
     updateHoveredCard(x, e.touches[0].clientY)
   }
@@ -510,18 +511,18 @@ function doFanMomentum(){
 function trySelectFanCard(clientX,clientY){
   const rect=fanCanvasRef.value?fanCanvasRef.value.getBoundingClientRect():fanRect;if(!rect)return
   const lx=clientX-rect.left,ly=clientY-rect.top
-  const total=TAROT_CARDS.length,cx=fanW/2,cy=fanH+400,R=500,span=3.4,{w:cw,h:ch}=getCardSize()
+  const total=TAROT_CARDS.length,{w:cw,h:ch}=getCardSize(fanH),cx=fanW/2,cy=fanH+500-ch/2,R=500,span=3.4
   let bestIdx=-1
   for(let i=0;i<total;i++){const angle=-span/2+i*(span/(total-1))-fanOffset;if(Math.abs(angle)>span/2+0.1)continue;const x=cx+Math.sin(angle)*R,y=cy-Math.cos(angle)*R,dx=lx-x,dy=ly-y,cosA=Math.cos(angle),sinA=Math.sin(angle),lc_x=dx*cosA+dy*sinA,lc_y=-dx*sinA+dy*cosA;if(Math.abs(lc_x)<=cw/2+4&&Math.abs(lc_y)<=ch/2+4)bestIdx=i}
   if(bestIdx>=0)pickFanCard(bestIdx)
 }
 function pickFanCard(idx){
   if(pickedIndices.includes(idx))return;if(pickedIndices.length>=drawCount.value)return
-  play('cardDraw');try{navigator.vibrate&&navigator.vibrate(45)}catch(e){};pickedIndices=[...pickedIndices,idx];pickedList.value=[...pickedIndices];liftProgress[idx]=0;animateLift(idx)
+  play('cardDraw');vib('medium');pickedIndices=[...pickedIndices,idx];pickedList.value=[...pickedIndices];liftProgress[idx]=0;animateLift(idx)
   pickedCount.value=pickedIndices.length
   if(pickedCount.value>=drawCount.value)setTimeout(()=>revealCards(),650)
 }
-function animateLift(idx){const TARGET=getCardSize().h*0.3,FRAMES=8;let frame=0;function step(){frame++;const t=frame/FRAMES;liftProgress[idx]=TARGET*(1-(1-t)*(1-t));drawFan();if(frame<FRAMES)setTimeout(step,16)};step()}
+function animateLift(idx){const TARGET=getCardSize(fanH).h*0.3,FRAMES=8;let frame=0;function step(){frame++;const t=frame/FRAMES;liftProgress[idx]=TARGET*(1-(1-t)*(1-t));drawFan();if(frame<FRAMES)setTimeout(step,16)};step()}
 function revealCards(){
   const res=pickedIndices.map((cardIdx)=>{const card=shuffledDeck[cardIdx]||TAROT_CARDS[cardIdx],reversed=Math.random()<0.3,kw=TAROT_KEYWORDS[card.origIdx],meaning=kw?kw[reversed?1:0]:'';return{name:card.name,symbol:card.symbol,color:card.color,meaning,reversed,img:card.img}})
   pendingResults.value=res;flipState.value=res.map(()=>false);phase.value='flipping'
@@ -546,9 +547,8 @@ function onShuffleMouseUp(){if(!shuffleMouseDown)return;shuffleMouseDown=false;o
 
 function getTarotResultData() {
   return results.value.map(r => ({
-    name: r.name,
-    orientation: r.reversed ? '逆位' : '正位',
-    meaning: r.meaning
+    id: r.origIdx,
+    reversed: r.reversed
   }))
 }
 </script>
@@ -578,7 +578,7 @@ function getTarotResultData() {
 .flip-card-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .spread-hint { text-align: center; font-size: 13px; color: #999; margin: 4px 0 8px; }
 .fan-wrap { width: 100%; overflow: hidden; background: var(--primary-light); border-radius: 10px; margin-bottom: 8px; }
-.fan-canvas { width: 100%; height: 250px; display: block; touch-action: pan-y; background: transparent; }
+.fan-canvas { width: 100%; height: 415px; display: block; touch-action: pan-y; background: transparent; }
 .result-cards { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
 .tarot-result-card { flex: 1; min-width: 80px; max-width: 130px; text-align: center; }
 .position-label { font-size: 11px; color: #999; margin-bottom: 4px; }
@@ -598,7 +598,7 @@ function getTarotResultData() {
   .picked-card-empty { width: 105px; height: 157px; font-size: 22px; }
   .flip-card { width: 105px; height: 157px; }
   .tarot-card-img-wrap { width: 105px; height: 157px; }
-  .fan-canvas { height: 300px; }
+  .fan-canvas { height: 450px; }
 }
 @media (min-width: 1200px) {
   .deck-display { height: 380px; }

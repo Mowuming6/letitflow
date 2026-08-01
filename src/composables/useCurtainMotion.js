@@ -22,6 +22,7 @@ function createGhost() {
   removeGhost()
   const ghost = document.createElement('div')
   ghost.className = 'dialog-curtain-ghost'
+  const isDark = document.querySelector('.app-shell.dark') !== null
   Object.assign(ghost.style, {
     position: 'fixed',
     left: '0px',
@@ -29,7 +30,7 @@ function createGhost() {
     width: '0px',
     height: '0px',
     borderRadius: '999px',
-    background: '#fff',
+    background: isDark ? '#15151e' : '#fff',
     boxShadow: '0 10px 28px rgba(0,0,0,0.14)',
     pointerEvents: 'none',
     zIndex: '10000',
@@ -268,6 +269,10 @@ function runLeave(el, popupSelector, done) {
 
 export function helpCurtainBeforeEnter(el) {
   el.style.opacity = '0'
+  // Teleport mask to body to ensure position:fixed is always viewport-relative
+  if (el.parentNode !== document.body) {
+    document.body.appendChild(el)
+  }
 }
 
 export function helpCurtainEnter(el, done) {
@@ -280,6 +285,10 @@ export function helpCurtainLeave(el, done) {
 
 export function themeCurtainBeforeEnter(el) {
   el.style.opacity = '0'
+  // Same teleport for theme popup
+  if (el.parentNode !== document.body) {
+    document.body.appendChild(el)
+  }
 }
 
 export function themeCurtainEnter(el, done) {

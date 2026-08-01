@@ -4,6 +4,7 @@
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
+      <Teleport to="body">
       <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
         <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
           <div class="help-popup">
@@ -17,11 +18,18 @@
 3.请求指点的事情。如婚姻、事业、运程、流年、工作、财运...等。
 4.抽签：点上面的签筒抽签按钮，或用手指摇晃签筒，抽出观音灵签。
 5.掷杯确认：前去圣杯投掷界面，默念"如果您愿意解答疑惑，请给我三个圣杯"，若连续获得三个圣杯（一正一反），可得此灵签。
-6.【手势】：开启手势后，在镜头前【左右挥动手掌】，即可晃动签筒抽签。【握拳】可重新开始。
+
+【手势】：
+在镜头前【左右挥动手掌】，即可晃动签筒抽签。
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
+
 答案仅供参考，最终决定永远由你自己做出。</span>
         </div>
       </div>
       </Transition>
+      </Teleport>
       <div class="page-title">观音灵签</div>
       <div class="page-subtitle">观音垂慈示，一签解千愁</div>
       <input class="input-field" placeholder="输入所问之事（可选）" v-model="question" />
@@ -45,6 +53,7 @@
         <div class="q-tabs">
           <div v-for="(label,i) in TAB_LABELS" :key="i"
             class="q-tab" :class="{'q-tab-on': activeTab === i}"
+            role="button" tabindex="0"
             @click="switchTab(i)">{{ label }}</div>
         </div>
         <div class="q-tab-content">
@@ -144,15 +153,10 @@ function handleGesture(e) {
   }
 }
 
-function handleGestureClick(e) {
-  if (showResult.value && e.detail.state === 'fist' && phase.value !== 'shake' && phase.value !== 'fall') {
-    reset()
-  }
-}
-
+function onPointReset() { if (showResult.value) reset() }
 onMounted(()=>{
   document.addEventListener('gesture-trigger', handleGesture)
-  document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
   initSticks()
   const cv=canvasRef.value;const rect=cv.getBoundingClientRect();const dpr=window.devicePixelRatio||2
   cv.width=rect.width*dpr;cv.height=rect.height*dpr;W=cv.width;H=cv.height
@@ -170,7 +174,7 @@ onMounted(()=>{
 })
 onUnmounted(()=>{
   document.removeEventListener('gesture-trigger', handleGesture)
-  document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
   if(raf)cancelAnimationFrame(raf)
 })
 
@@ -257,14 +261,10 @@ function finishShake(){
   store.saveHistory('🛕 观音灵签',qianDisplayTitle.value,question.value || '（用户未输入问题）')
 }
 function getQianResultData() {
+  const idx = chosenQian % QIAN_DATA.length
   return {
-    title: qianDisplayTitle.value,
-    poem: qianPoem.value,
-    shiyi: qianShiyi.value,
-    jieyue: qianJieyue.value,
-    essence: qianEssence.value,
-    tabContent: tabContents.value[activeTab.value] || '',
-    activeTabLabel: TAB_LABELS[activeTab.value] || ''
+    id: idx + 1,
+    activeTabLabel: TAB_LABELS[activeTab.value] || '整体解释'
   }
 }
 </script>

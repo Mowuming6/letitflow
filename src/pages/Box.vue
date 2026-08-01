@@ -1,9 +1,10 @@
 <template>
-  <div class="container" :style="themeStyle">
+  <div class="container box-page" :style="themeStyle">
     <div class="top-slogan">把纠结交给随机，把勇气留给自己</div>
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
+      <Teleport to="body">
       <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
         <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
           <div class="help-popup">
@@ -13,10 +14,18 @@
 
 如何使用：
 点击按钮或拉动摇杆，抽出今日运势~
-【手势】：开启手势后，在镜头前【上下挥动手掌】，即可抽取运势。【握拳】可重新抽取。</span>
+
+【手势】：
+在镜头前【上下挥动手掌】，即可抽取运势；
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
+
+</span>
         </div>
       </div>
       </Transition>
+      </Teleport>
       <div class="page-title">今日运势</div>
       <div class="page-subtitle">旦暮一签，吉凶自见</div>
 
@@ -120,20 +129,15 @@ function handleGesture(e) {
   }
 }
 
-function handleGestureClick(e) {
-  if (showResult.value && e.detail.state === 'fist' && !spinning.value) {
-    reset()
-  }
-}
-
+function onPointReset() { if (showResult.value) reset() }
 onMounted(() => {
   document.addEventListener('gesture-trigger', handleGesture)
-  document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
 })
 
 onUnmounted(() => {
   document.removeEventListener('gesture-trigger', handleGesture)
-  document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
 })
 const spinning = ref(false)
 const showResult = ref(false)
@@ -182,6 +186,7 @@ function spin() {
       if (frame % 2 === 0) col1 = (col1 + 1) % FORTUNE_ITEMS.length
       if (frame % 3 === 0) col2 = (col2 + 1) % FORTUNE_ITEMS.length
     }
+    // 三列依次落定到同一个结果值：最终三列 emoji 完全一致（真正老虎机三列相同的观感）
     if (frame > totalFrames - 10) col0 = resultIdx
     if (frame > totalFrames - 5) col1 = resultIdx
     if (frame >= totalFrames) col2 = resultIdx
@@ -209,6 +214,7 @@ function spin() {
 </script>
 
 <style scoped>
+/* 每日运势背景由全局统一背景(App.vue global-page-bg)处理，此处不再单独铺图 */
 .slot-machine {
   height: 190px;
   background: var(--primary-light) !important;

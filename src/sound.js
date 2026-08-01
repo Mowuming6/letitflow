@@ -171,9 +171,20 @@ const SOUNDS = {
     noise(c, t, dur,       gain,       0.001, 'lowpass', 1000 + vel * 30, 1)
     tone (c, t, 200, 'sine', dur * 1.3, gain * 0.5, 0.001, dur, 100)
   },
+  orbitTick(c, t) {
+    // 风铃质感：明亮基音 + 非谐泛音；整体更轻、起音柔和、余音更长
+    const ATK = 0.035                 // 柔和起音渐入
+    const f0 = 2400
+    tone(c, t,         f0,       'sine', 1.8, 0.070, ATK, 1.8)   // 基音，长尾余音
+    tone(c, t + 0.004, f0 * 2.76, 'sine', 1.3, 0.040, ATK, 1.3)  // 非谐泛音1
+    tone(c, t + 0.008, f0 * 5.40, 'sine', 0.95, 0.024, ATK, 0.95) // 非谐泛音2（更亮）
+    tone(c, t + 0.013, f0 * 8.93, 'sine', 0.6, 0.013, ATK, 0.6)  // 非谐泛音3（高频闪烁）
+    // 极轻、柔起音的高频瞬态，提供一点"叮"的颗粒感（不抢头）
+    noise(c, t, 0.05, 0.03, 0.012, 'highpass', 7200, 1)
+  },
 }
 
-function vib(type) {
+export function vib(type) {
   try {
     if (navigator.vibrate) {
       const ms = type === 'heavy' ? 80 : type === 'medium' ? 40 : 20
@@ -221,4 +232,20 @@ export function playBounce(vel) {
   if (!c) return
   fn(c, c.currentTime + 0.01, vel)
   vib(vel > 7 ? 'heavy' : vel > 3 ? 'medium' : 'light')
+}
+
+// 指针/手指经过轨道环时的轻灵提示音（高频"叮" + 轻震动）
+export function playOrbit() {
+  const fn = SOUNDS.orbitTick
+  if (!fn) return
+  const c = prepare()
+  if (!c) return
+  fn(c, c.currentTime + 0.01)
+  vib('light')
+}
+
+// 首次用户交互后恢复 AudioContext（绕过浏览器自动播放限制）
+export function resumeAudio() {
+  const c = getCtx()
+  if (c) { try { if (c.state !== 'running') c.resume() } catch (e) {} }
 }

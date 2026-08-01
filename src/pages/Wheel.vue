@@ -4,23 +4,30 @@
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
+      <Teleport to="body">
       <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
         <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
           <div class="help-popup">
             <div class="help-popup-close" @click="showHelpPopup = false">×</div>
             <div class="help-popup-title">使用说明</div>
-            <span class="help-popup-content">n选一场景，更实用，快速帮你做决定！
+            <span class="help-popup-content">经典n选一场景，更实用，快速帮你做决定！
 
 转盘是帮助用户在多个选项中做出选择的工具，适合解决"吃什么"、"谁来做"等选择困难问题。
 
 如何使用：
 在输入栏输入选项，点击添加按钮添加选项。
 点击选项标签，可以修改选项名称。
-【手势】：开启手势后，在镜头前【上下挥动手掌】，即可转动转盘。【握拳】可重新开始。
+
+【手势】：
+开启手势后，在镜头前【上下挥动手掌】，即可转动转盘。
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
 </span>
         </div>
       </div>
       </Transition>
+      </Teleport>
       <div class="page-title">命运转盘</div>
       <div class="page-subtitle">转盘随心止，所指即是缘</div>
       <div class="add-row">
@@ -110,15 +117,10 @@ function handleGesture(e) {
   }
 }
 
-function handleGestureClick(e) {
-  if (showResult.value && e.detail.state === 'fist' && !spinning.value) {
-    reset()
-  }
-}
-
+function onPointReset() { if (showResult.value) reset() }
 onMounted(() => {
   document.addEventListener('gesture-trigger', handleGesture)
-  document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
   const cv = canvasRef.value
   const rect = cv.getBoundingClientRect()
   const dpr = window.devicePixelRatio || 2
@@ -132,7 +134,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
   document.removeEventListener('gesture-trigger', handleGesture)
-  document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
   if (animFrame) cancelAnimationFrame(animFrame)
 })
 

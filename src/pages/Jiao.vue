@@ -4,6 +4,7 @@
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
+      <Teleport to="body">
       <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
         <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
           <div class="help-popup">
@@ -17,12 +18,18 @@
 1.选择安静的环境，保持心神专一，不可在酒后或心怀戏谑时进行，清晰报上姓名、年龄、住址，说明想请示的事情，一次只问一件事。
 2.禀报完毕后，等约10秒钟，给神明"思考"的时间。
 3.点击按钮或使用手指投掷出圣杯，根据落地后的形态判断神明的回应。
-4.【手势】：开启手势后，在镜头前【上下挥动手掌】，即可抛动圣杯。【握拳】可重新开始。
+
+【手势】
+在镜头前【上下挥动手掌】，即可抛动圣杯
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
 
 答案仅供参考，最终决定永远由你自己做出。</span>
         </div>
       </div>
       </Transition>
+      </Teleport>
       <div class="page-title">掷圣杯</div>
       <div class="page-subtitle">三掷辨征兆，诚心问所求</div>
       <input class="input-field" placeholder="输入所问之事（可选）" v-model="question" />
@@ -114,15 +121,10 @@ function handleGesture(e) {
   }
 }
 
-function handleGestureClick(e) {
-  if (showResult.value && e.detail.state === 'fist' && phase.value === 'done') {
-    reset()
-  }
-}
-
+function onPointReset() { if (showResult.value) reset() }
 onMounted(()=>{
   document.addEventListener('gesture-trigger', handleGesture)
-  document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
   dpr=window.devicePixelRatio||2
   const cv=canvasRef.value;const rect=cv.getBoundingClientRect()
   cv.width=rect.width*dpr;cv.height=rect.height*dpr;W=cv.width;H=cv.height
@@ -139,7 +141,7 @@ onMounted(()=>{
 })
 onUnmounted(()=>{
   document.removeEventListener('gesture-trigger', handleGesture)
-  document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
   if(raf)cancelAnimationFrame(raf)
 })
 

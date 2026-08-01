@@ -1,7 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
-  { path: '/',          component: () => import('./pages/Index.vue') },
+  { path: '/',          redirect: '/index' },
   { path: '/box',       component: () => import('./pages/Box.vue') },
   { path: '/dice',      component: () => import('./pages/Dice.vue') },
   { path: '/coin',      component: () => import('./pages/Coin.vue') },
@@ -14,8 +14,11 @@ const routes = [
   { path: '/lenormand', component: () => import('./pages/Lenormand.vue') },
   { path: '/book',      component: () => import('./pages/Book.vue') },
   { path: '/history',   component: () => import('./pages/History.vue') },
-  { path: '/tech',      component: () => import('./pages/BoxBox.vue') },
-  { path: '/tech2',     component: () => import('./pages/BoxBoxBox.vue') },
+  { path: '/index',     component: () => import('./pages/Index.vue') },
+  { path: '/about',     component: () => import('./pages/About.vue') },
+
+  { path: '/flow',      component: () => import('./pages/FlowField.vue') },
+  { path: '/diceshowcase', redirect: '/index' },
 ]
 
 export const router = createRouter({

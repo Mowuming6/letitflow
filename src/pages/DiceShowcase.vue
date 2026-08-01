@@ -1,35 +1,10 @@
 <template>
-  <div class="ds-root" ref="rootEl" :class="{ 'ds-cursor-star': onFirstTwoPages, 'is-day': isDay }" @scroll.passive="onScroll">
+  <div class="ds-root" ref="rootEl" @scroll.passive="onScroll">
     <div class="ds-page1">
       <div class="ds-wrap" ref="mountEl"></div>
     </div>
-    <!-- 第一页骰子下方文案：仅首页第一页显示 -->
-    <div class="ds-dice-caption" :class="{ 'ds-dice-caption--day': isDay, 'is-visible': captionVisible }" aria-hidden="true">
-      <!-- 中英文每 10 秒渐隐渐显轮换（1.8s 温和过渡） -->
-      <div class="ds-dice-caption-text" :class="{ 'is-fading': captionFading }">
-        <template v-if="!captionEn">
-          <div class="ds-dice-caption-line1">不必纠结 随天意</div>
-          <div class="ds-dice-caption-line2">已帮{{ peopleCount }}人做了{{ decisionCount }}次决定</div>
-        </template>
-        <template v-else>
-          <div class="ds-dice-caption-line1">Let It Flow</div>
-          <div class="ds-dice-caption-line2">Helped {{ peopleCount }} people make {{ decisionCount }} decisions</div>
-        </template>
-      </div>
-    </div>
     <div class="ds-page2">
     </div>
-    <!-- 呼吸灯提示：第一、二页底部，可点击向下滚动；手势模式下移手掌到此处并握拳即翻页 -->
-    <button
-      v-show="!onPage3"
-      ref="scrollDownEl"
-      type="button"
-      class="ds-breathe"
-      :class="{ 'ds-breathe--day': isDay }"
-      @click="scrollDownNext"
-    >向下滚动页面</button>
-    <!-- 第三页手势缩放提示：仅手势模式显示，告诉用户用捏合手势缩放地球 -->
-    <div v-show="onPage3 && store.isGesture" class="ds-gesture-hint">{{ zoomHintText }}</div>
     <!-- 第一页背景图层：DOM 实现（替代原画布内 nightPlane），置于最底层 -->
     <div class="ds-pagebg1" :style="pageBg1Style" aria-hidden="true"></div>
     <!-- 第二、三页背景图层：DOM 实现，昼夜切换白.png / 夜.png；过渡时从中心缩放展开 + 淡入 -->
@@ -55,66 +30,6 @@
     <div class="ds-page3">
       <div class="ds-info" ref="infoEl">
         <slot />
-      </div>
-      <!-- 占卜介绍卡片：点击地球上的占卜柱/名称气泡弹出，右侧滑出 -->
-      <div
-        v-if="markCardOpen && selectedMark"
-        class="mark-card-backdrop"
-        @click="closeMarkCard"
-      ></div>
-      <div
-        v-if="markCardOpen && selectedMark"
-        class="mark-card"
-        :class="{ 'dn-mode-day': isDay }"
-        @click.stop
-      >
-        <button class="mark-card-close" type="button" @click.stop="closeMarkCard" aria-label="关闭">×</button>
-        <div class="mark-card-body">
-        <img
-          v-if="selectedMark.image"
-          :src="selectedMark.image"
-          class="mark-card-img"
-          alt=""
-          referrerpolicy="no-referrer"
-          @error="(e) => (e.target.style.display = 'none')"
-        />
-        <div class="mark-card-name">{{ selectedMark.name }}</div>
-        <div v-if="selectedMark.alias" class="mark-card-alias">{{ selectedMark.alias }}</div>
-        <div class="mark-card-meta">
-          <span>国家：{{ selectedMark.country }}</span>
-          <span v-if="selectedMark.countryEn">英文名：{{ selectedMark.countryEn }}</span>
-          <span>信仰：<i class="mark-stars">{{ '★'.repeat(selectedMark.faith) }}{{ '☆'.repeat(5 - selectedMark.faith) }}</i></span>
-          <span>影响：<i class="mark-stars">{{ '★'.repeat(selectedMark.influence) }}{{ '☆'.repeat(5 - selectedMark.influence) }}</i></span>
-        </div>
-        <div
-          v-for="s in markSections"
-          :key="s.label"
-          class="mark-card-sec"
-          :class="{ 'mark-card-intro': s.label === '详细介绍' }"
-        ><b>{{ s.label }}</b>{{ s.value }}</div>
-        <a v-if="selectedMark.link" :href="selectedMark.link" target="_blank" rel="noopener" class="mark-card-link">查看百科资料 →</a>
-        </div>
-      </div>
-      <!-- 占卜柱悬停星级提示：地球停转 + 高亮对应柱时跟随光标弹出 -->
-      <div
-        v-if="markHover"
-        class="mark-tip"
-        :class="{ 'dn-mode-day': isDay }"
-        :style="{ left: hoverTip.x + 'px', top: hoverTip.y + 'px' }"
-      >
-        <div class="mark-tip-name">
-          <span>{{ markHover.record.name }}</span>
-          <img
-            v-if="markHover.record.image"
-            :src="markHover.record.image"
-            class="mark-tip-img"
-            alt=""
-            referrerpolicy="no-referrer"
-            @error="(e) => (e.target.style.display = 'none')"
-          />
-        </div>
-        <div v-if="markHover.kind !== 'infl'" class="mark-tip-row">信仰 <i class="mark-stars">{{ '★'.repeat(markHover.record.faith) }}{{ '☆'.repeat(5 - markHover.record.faith) }}</i></div>
-        <div v-if="markHover.kind !== 'faith'" class="mark-tip-row">影响 <i class="mark-stars">{{ '★'.repeat(markHover.record.influence) }}{{ '☆'.repeat(5 - markHover.record.influence) }}</i></div>
       </div>
     </div>
     <!-- 自定义滚动指示条 -->
@@ -144,7 +59,7 @@
       :class="{ 'dn-mode-day': isDay }"
       @click.stop="goBackToPage2"
       aria-label="返回第二页"
-    >返回第二页</button>
+    >← 返回第二页</button>
 
     <!-- 主题选择弹层（复用全局 .help-* 样式，幕布动效与说明框一致） -->
     <Teleport to="body">
@@ -182,22 +97,18 @@
           <div class="help-popup-content" style="font-size: 13.5px; line-height: 1.6; color: #444;">
             <p style="margin-bottom: 12px; color: #666; font-size: 13px; text-align: center;">开启手势后，可通过前置摄像头进行非接触式悬空互动。<br/>请确保环境光线充足，并将手部完整伸向摄像头。</p>
             <div style="margin-bottom: 12px;">
-              <strong :style="`color: ${currentTheme.primary} !important`">✨ 全局通用手势：</strong>
+              <strong style="color: var(--primary);">✨ 全局通用手势：</strong>
               <div style="padding-left: 10px; margin-top: 5px; display: flex; flex-direction: column; gap: 6px;">
-                <div><b>移动光标：</b>伸出【食指☝️】或【张开手掌✋】在镜头前移动，可控制屏幕上的手势光标。当识别手势时，右下角摄像头界面会绑定手势骨骼。</div>
+                <div><b>移动光标：</b>伸出【食指☝️】或【张开手掌✋】在镜头前移动，可控制屏幕上的手势光标。</div>
                 <div><b>点击确认：</b>将光标悬停在卡片或按钮上，【握拳✊】即可触发点击动作。</div>
                 <div><b>返回 / 翻页：</b>在首页【比✌️】可向上滚动（上一页）；在其它页面【比✌️】等同于左上角【返回】按钮（回到首页，从第二页进入的子页则回到第二页）。</div>
-                <div><br/><b>上方或下方栏：</b><span style="display: block; padding-left: 4px; margin-top: 2px;">手势光标在图标上停留3秒可跳转到功能页面。</span></div>
-                <div><br/><b>首页：</b><span style="display: block; padding-left: 4px; margin-top: 2px;">骰子眼球可跟随手势光标移动。首页第一页和第二页光标在骰子上【保持握拳状态✊】并移动可旋转骰子；第二页在功能卡片上【保持握拳状态✊】并移动【保持握拳状态✊】并移动可旋转功能卡片，光标在某一功能上停留3秒可跳转到功能页面。光标在“向下滚动页面”文字处【握拳✊】可滚动页面。</span></div>
-                <div><br/><b>占卜世界地图（第三页）：</b><span style="display: block; padding-left: 4px; margin-top: 2px;">在地球上【握拳✊并左右拖拽】可旋转地球；<br/>比出【食指☝️】并保持 3 秒解锁缩放，之后用【拇指+食指捏合/张开】缩放地球，静止 2 秒自动锁定大小；<br/>将光标停在任一柱状图或国家名称上 3 秒，自动弹出该占卜的介绍卡片，【保持握拳状态✊】2秒以上并上下移动可上下翻阅页面（在卡片上或卡片外【握拳✊】可关闭）。</span></div>
               </div>
             </div>
             <div>
-              <strong class="gh-section" :style="`color: ${currentTheme.primary} !important`">👋 各页面互动手势：</strong>
+              <strong class="gh-section" style="color: var(--primary);">👋 各页面互动手势：</strong>
               <div style="padding-left: 10px; margin-top: 5px; display: flex; flex-direction: column; gap: 8px;">
-                <div><br/><b>所有占卜页面：</b><span style="display: block; padding-left: 4px; margin-top: 2px;"><br/>伸出【食指☝️】3秒=触发重新占卜；【短暂握拳✊】=点击（点按钮、展开 AI 解读等）；【保持握拳状态✊】2秒以上并上下移动可上下翻阅页面</span></div>
-                <div><br/><b>每日运势 / 骰子之神 / 命运硬币 / 命运转盘 / 掷圣杯 / 六爻金钱卦：</b><span style="display: block; padding-left: 4px; margin-top: 2px;">【上下挥手掌✋】，即可投掷/起卦。<br/></span></div>
-                <div><br/><b>观音灵签 / 答案之书：</b><span style="display: block; padding-left: 4px; margin-top: 2px;">【左右挥手掌✋】，即可抽签/翻书。</span></div>
+                <div><br/><b>每日运势 / 骰子之神 / 命运硬币 / 命运转盘 / 掷圣杯 / 六爻金钱卦：</b><span style="display: block; padding-left: 4px; margin-top: 2px;">【上下挥手掌✋】，即可投掷/起卦。<br/>【握拳✊】触发重新占卜。</span></div>
+                <div><br/><b>观音灵签 / 答案之书：</b><span style="display: block; padding-left: 4px; margin-top: 2px;">【左右挥手掌✋】，即可抽签/翻书。<br/>【握拳✊】触发重新占卜。</span></div>
                 <div><br/><b>塔罗占卜 / 雷诺曼占卜：</b><span style="display: block; padding-left: 4px; margin-top: 2px;">【握拳✊】，开始洗牌；<br/>【左右挥手掌✋】即可洗牌；<br/>选牌界面，【左右挥手掌✋】可左右滑动牌区，伸出【食指☝️】可在当前牌区选牌，食指在某牌上停留超过3秒即可选中该牌。<br/>【握拳✊】触发重新占卜。</span></div>
               </div>
             </div>
@@ -218,13 +129,10 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 
 import { feature as topoFeature } from 'topojson-client'
 import worldTopo from 'world-atlas/countries-110m.json'
-import divinationData from '../data/divination.json'
 import { store } from '../store'
 import { NAV_LIST } from '../navList'
 import { THEMES } from '../theme'
 import { helpCurtainBeforeEnter, helpCurtainEnter, helpCurtainLeave } from '../composables/useCurtainMotion.js'
-import { useCounters } from '../composables/useCounters.js'
-import { playBounce, resumeAudio, playOrbit, vib } from '../sound.js'
 import whiteBg from '../../public/images/background/白.png'
 import nightBg from '../../public/images/background/夜.png'
 import page1Night from '../../public/images/background/夜晚2.png'   // 第一页夜景（替代画布内 nightPlane，改 DOM 图层）
@@ -239,7 +147,6 @@ if (typeof window !== 'undefined') {
 
 const mountEl      = ref(null)
 const rootEl       = ref(null)
-const scrollDownEl = ref(null)   // “向下滚动页面”按钮，用于手势握拳命中检测
 const infoEl       = ref(null)
 const floatLayer   = ref(null)   // 漂浮汉字图层（鼠标探照灯遮罩）
 const eyeActive    = ref(false)
@@ -252,16 +159,6 @@ const isDay = computed({
 })
 const onPage1 = computed(() => scrollPercent.value < 50)   // 仅第一页显示漂浮汉字探照灯
 const onPage3 = computed(() => scrollPercent.value >= 66)  // 仅第三页显示「返回第二页」按钮
-// 第一、二页：鼠标指针显示星星 ✦；第三页恢复正常光标
-const onFirstTwoPages = computed(() => scrollPercent.value < 66)
-// 首页第一页骰子下方文案：全局共享计数（已帮XX人做了XX次决定）
-const { peopleCount, decisionCount } = useCounters()
-// 文案中英轮换：每 10 秒渐隐→切换语言→渐显（渐变时长与 CSS 的 1.8s 对应）
-const captionEn = ref(false)       // false=中文，true=英文
-const captionFading = ref(false)   // true 时文字透明（渐隐中）
-let captionTimer = null            // 中英轮换定时器
-// 骰子下方文案：仅停留在第一页时显示，一离开第一页就渐隐（阈值 15，可调）
-const captionVisible = computed(() => scrollPercent.value < 15)
 // 第一页背景图（DOM 图层，替代画布内 nightPlane）：昼→白天.png，夜→夜晚2.png
 const pageBg1Url = computed(() => isDay.value ? page1Day : page1Night)
 // 背景底色（background-color）：白昼取第二页 白.png 的实际背景区颜色 #A7A2A0（中性偏暖灰，
@@ -290,7 +187,7 @@ let sp           = 0   // 0=page1, 0.5=page2, 1=page3，animate() 内更新，�
 // ── 第二页漂浮卡牌 ────────────────────────────────────────────
 const router = useRouter()
 const route = useRoute()
-const FLOAT_CARDS = NAV_LIST.filter(n => n.path !== '/' && n.path !== '/index' && n.path !== '/about')
+const FLOAT_CARDS = NAV_LIST.filter(n => n.path !== '/' && n.path !== '/index')
 
 // 相机固定位置（不再有 OrbitControls 移动相机）
 // 响应式相机距离：桌面端保持原值；移动端（窄屏）自动拉远相机，使骰子整体缩小不溢出
@@ -299,21 +196,6 @@ function responsiveCamZ(w = window.innerWidth) {
   if (w < 768)  return 3.1    // 小平板
   if (w < 1100) return 2.7    // 窄窗口 / 大平板
   return 2.4444               // 桌面：原值（正好）
-}
-// 地球水平偏移：横屏/桌面卡片在右，地球偏左给卡片让位；竖屏手机卡片居中，地球居中显示
-function globeOffsetX() {
-  const portraitPhone = window.innerWidth <= 768 &&
-    (window.matchMedia ? window.matchMedia('(orientation: portrait)').matches : true)
-  return portraitPhone ? 0 : -0.6
-}
-// 让地球（含占卜柱/名称卡片凸起）完整可见所需的相机距离：以屏幕较窄维度为约束
-function globeFitCamZ() {
-  const aspect = (window.innerWidth || 1) / (window.innerHeight || 1)
-  const vHalf = Math.tan(THREE.MathUtils.degToRad(50) / 2)   // 0.4663
-  const hHalf = vHalf * aspect
-  const fitR = 1.1                  // 需容纳的地球半径（含凸起占卜柱/标签）
-  const need = fitR / Math.min(vHalf, hHalf)
-  return Math.max(responsiveCamZ(), need)
 }
 const CAMERA_DEFAULT = new THREE.Vector3(0, 0, responsiveCamZ())   // 整体缩小为 90%（2.2 ÷ 0.9）
 
@@ -338,51 +220,11 @@ const _rollQ       = new THREE.Quaternion()  // 骰子滚动四元数（避免�
 const _rollAxis    = new THREE.Vector3(0, 0, 1)  // 绕 Z 轴滚动
 const GLOBE_PARTICLE_N = 80000             // ← 地球粒子总数（改这里增减密度）
 
-// ── 占卜数据地球标记（第三页） ───────────────────────────────
-let globeMarks = null
-const markMeshes = []            // 可点击对象（柱体 + 标签精灵），userData.record
-const markCardOpen = ref(false)  // 右侧介绍卡片是否打开
-const selectedMark = ref(null)   // 当前选中的占卜记录
-
-// 地球缩放门控：需先「伸出食指 ☝️」保持 3 秒解锁；缩放静止 2 秒后自动锁定，其他时间不触发缩放
-const zoomArmed = ref(false)
-const zoomLocked = ref(false)
-const lastZoomChangeTime = ref(0)
-const zoomDir = ref('')          // 当前缩放方向：'in' 放大中 / 'out' 缩小中 / '' 静止
-let pointProgress = 0            // 食指解锁进度 0~1（手势层实时回传）
-let emaDist = null               // 捏合距离 EMA 平滑值，滤除逐帧手部抖动
-
-// 第三页手势提示文案：随缩放解锁/锁定状态变化，并实时显示缩放方向与当前大小
-const zoomHintText = computed(() => {
-  if (!zoomArmed.value) {
-    if (pointProgress > 0) return `伸出「食指」保持3秒解锁 · 进度 ${Math.round(pointProgress * 100)}%`
-    return '伸出「食指」手势并保持 3 秒，解锁地球缩放'
-  }
-  if (zoomLocked.value) return '大小已锁定 · 再伸出「食指」3 秒可重新调整'
-  const pct = Math.round(((cameraZoom - 1.1) / (5.0 - 1.1)) * 100)
-  const recent = Date.now() - lastZoomChangeTime.value
-  let dir = ''
-  if (recent < 500) dir = zoomDir.value === 'in' ? '放大中 ▲' : zoomDir.value === 'out' ? '缩小中 ▼' : ''
-  if (dir) return `调整大小状态中 · 当前 ${pct}%`
-  return `可缩放 · 当前 ${pct}% · 静止 2 秒自动锁定`
-})
-const markHover = ref(null)      // 悬停的占卜柱信息 { record, kind }
-const hoverTip = ref({ x: 0, y: 0 })  // 悬停提示框定位（屏幕坐标）
-let hoveredMarkMesh = null       // 当前高亮的柱体 mesh（非响应式）
-let prevHoverMesh = null         // 上一次高亮的柱体（用于切换 depthTest/renderOrder）
-let hoveredLabel = null          // 当前悬停/点击高亮的占卜名称气泡
-let clickedLabel = null          // 当前因点击打开卡片而保持高亮的占卜名称气泡
-let lastGlobeInteract = -1e12    // 最近一次拖拽/悬停地球的时间戳（用于停转后延时恢复自转）
-let markDragMoved = 0            // 本次地球拖拽位移累计（区分点击/拖拽）
-let markDragActive = false       // 本次按下是否落在地球区域
-let markDownX = 0, markDownY = 0 // 本次按下时的屏幕坐标（用于点击拾取）
-
-let cameraZoom   = globeFitCamZ()   // 第二页滚轮/移动端捏合控制相机 z；默认按屏幕适配保证地球完整显示
+let cameraZoom   = 2.4444   // 第二页滚轮控制相机 z（默认 = CAMERA_DEFAULT.z，已等比重缩放）
 
 // 地球自定义拖拽旋转（不使用 OrbitControls，避免相机偏移）
 let globeDragging  = false
 let globeDragLastX = 0, globeDragLastY = 0
-let globeVibAccum  = 0   // 转动地球时震动反馈的位移累计器（达阈值触发一次轻震）
 
 // ── 粒子过渡系统 ─────────────────────────────────────────────
 const PARTICLE_N  = 20000
@@ -390,17 +232,13 @@ let particleSystem   = null
 let particlePhase    = 'dice'   // 'dice' | 'animating' | 'globe' | 'reversing'
 let particleStartTime = 0
 let reverseStartTime  = 0
-const reverseStartPos  = new THREE.Vector3()  // 倒放起点（地球正常位置），用于精确插值到骰子
 let orbitRevealStart  = -1
 let orbitExpandScale  = 1.0      // ← 轨道半径倍数：1=正常 >1=扩散出屏幕
-// 轨道悬停（指针/手指经过）检测状态
-let orbitHovering   = false      // 当前是否悬停在轨道上
-let lastOrbitHoverT = 0          // 上次触发音效时间戳（节流，避免快速连发）
 const ORBIT_EXPAND_MS = 800      // ← 正向扩散时长（毫秒）
 const ORBIT_FADE_MS   = 3000     // ← 轨道物件淡入时长（毫秒）
 const PARTICLE_MS    = 3000   // 过渡动画时长（毫秒）
 const DICE_FADE_MS   = 600   // 骰子淡出时长
-const GLOBE_FADE_MS  = 900   // 地球淡入时长（含柱状图和标签的渐入）
+const GLOBE_FADE_MS  = 50   // 地球淡入时长
 let   diceFadeStart  = 0
 let   globeFadeStart = 0
 
@@ -564,8 +402,6 @@ const floatChars = (() => {
 const LAMP_R = (typeof window !== 'undefined' && window.innerWidth < 480) ? 120 : 168
 
 function onLampMove(e) {
-  // 手势模式下探照灯由 onGestureHover 驱动，忽略真实指针，避免两套光标抢位置
-  if (store.isGesture) return
   const el = floatLayer.value
   if (!el) return
   el.style.setProperty('--lamp-x', e.clientX + 'px')
@@ -616,200 +452,13 @@ function goBackToPage2() {
   snapTo(1)
 }
 
-// 点击“向下滚动页面” → 滚到下一页（第一页→第二页，第二页→第三页）
-function scrollDownNext() {
-  goNextPage()
-}
-
-// 前进到下一页（手势/点击共用）
-function goNextPage() {
-  if (document.body.classList.contains('dialog-open')) return
-  if (snapLocked) return
-  const next = Math.min(2, snapPage + 1)
-  if (next === snapPage) return
-  snapLocked = true
-  snapTo(next)
-}
-
-// 首页✌手势：向上滚动（回到上一页，第三页→第二页→第一页）
-function goPrevPage() {
-  if (document.body.classList.contains('dialog-open')) return
-  if (snapLocked) return
-  const prev = Math.max(0, snapPage - 1)
-  if (prev === snapPage) return
-  snapLocked = true
-  snapTo(prev)
-}
-
-// 手势「滑动类」触发：首页✌派发的向上滚动即触发上一页
-function onGestureTrigger(e) {
-  // 信息卡片打开时：屏蔽所有页面切换（滚动改由握拳拖拽 gesture-fist-drag 处理）
-  if (markCardOpen.value) return
-  if (e.detail.type === 'swipe-up') goPrevPage()
-}
-
-// 握拳拖拽滚动介绍卡片：手向下移 → 内容向下滚（跟手）；手向上移 → 内容向上滚
-let cardDragActive = false
-let cardDragLastY = 0
-function onGestureFistDrag(e) {
-  if (!markCardOpen.value) { cardDragActive = false; return }
-  const body = document.querySelector('.mark-card-body')
-  if (!body) return
-  const y = e.detail.y
-  if (!cardDragActive) { cardDragActive = true; cardDragLastY = y; return }  // 首帧只基准，不滚
-  const dy = y - cardDragLastY          // 本帧相对上一帧的指针位移
-  cardDragLastY = y
-  // 增益 2.5：手部移动范围有限，放大位移才能滚完整张卡片
-  body.scrollTop += dy * 2.5
-}
-
-// 手势「握拳 = 点击」：落在可点击 UI 上交给全局手势层的原生点击；否则第一/二页拖拽骰子/轨道，第三页握拳在地球上=旋转
-let fistDragMode = false  // 首页第二页：握拳长按≥2s 进入的拖拽模式，松手时不视为点击导航
-
-function onGestureClick(e) {
-  const { x, y } = e.detail                      // 手掌光标屏幕坐标（与 aura-orb 一致）
-  // 主题色 / 手势说明等弹层：在「关闭按钮」或「弹层外」握拳 = 关闭；弹层内其它元素（如主题选项）交回原生点击
-  if (showThemePicker.value || showGestureHelp.value) {
-    const closeBtn = document.elementFromPoint(x, y)?.closest?.('.help-popup-close')
-    const popup = document.querySelector('.help-popup')
-    const r = popup && popup.getBoundingClientRect()
-    const onPopup = !!r && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom
-    if (closeBtn || !onPopup) {
-      showThemePicker.value = false
-      showGestureHelp.value = false
-    }
-    return
-  }
-  // 信息卡片打开时：只在关闭按钮或卡片外握拳才关闭；卡片内不响应
-  if (markCardOpen.value) {
-    const markCard = document.querySelector('.mark-card')
-    const cardRect = markCard?.getBoundingClientRect()
-    const onCloseBtn = document.elementFromPoint(x, y)?.closest?.('.mark-card-close')
-    const outsideCard = !cardRect || x < cardRect.left || x > cardRect.right || y < cardRect.top || y > cardRect.bottom
-    if (onCloseBtn || outsideCard) { closeMarkCard() }
-    return
-  }
-  // 落在可点击 UI 元素（顶部按钮、滚动按钮、关闭按钮等）上：原生点击由全局手势层处理，这里不进入 3D 拖拽
-  if (isOverClickable(x, y)) return
-  if (document.body.classList.contains('dialog-open')) return
-  if (snapLocked) return
-  // 第三页：悬停在柱状图/名称气泡上时，停留 3 秒已由悬停自动开卡，这里不再把握拳当作地球拖拽/点击
-  if (sp > 0.85 && markHover.value && markHover.value.record) return
-  onPtrDown(x, y)   // 第一/二页：握拳=按下，开始拖拽骰子/轨道；第三页：握拳在地球上=旋转
-}
-
-// 判断坐标是否落在可点击 UI 元素上（与全局手势层的原生点击判定保持一致）
-function isOverClickable(x, y) {
-  const el = document.elementFromPoint(x, y)
-  if (!el) return false
-  return !!el.closest('button, a, input, label, [role="button"], .clickable')
-}
-
-// 手势「悬停」：每帧把光球位置喂给 mouseX/mouseY，使眼球、灯光、骰子跟随、轨道拖拽都跟随手势光标
-let hoverOpenKey = null        // 当前停留的占卜柱记录（同一记录连续停留才计时）
-let hoverOpenStart = 0         // 开始停留的时间戳
-function onGestureHover(e) {
-  if (!store.isGesture) return
-  const { x, y } = e.detail
-  mouseX = x; mouseY = y
-  onPtrMove(x, y)
-  // 探照灯跟随手势光标
-  const el = floatLayer.value
-  if (el) {
-    el.style.setProperty('--lamp-x', x + 'px')
-    el.style.setProperty('--lamp-y', y + 'px')
-    el.style.setProperty('--lamp-r', LAMP_R + 'px')
-  }
-  // 第三页：在某一柱状图/名称气泡上停留 3 秒，自动弹出介绍卡片
-  if (sp > 0.85 && markHover.value && markHover.value.record) {
-    const rec = markHover.value.record
-    if (hoverOpenKey !== rec) { hoverOpenKey = rec; hoverOpenStart = Date.now() }
-    if (!markCardOpen.value && Date.now() - hoverOpenStart >= 3000) {
-      openMarkCard(rec)
-      hoverOpenKey = null
-    }
-  } else {
-    hoverOpenKey = null
-    hoverOpenStart = 0
-  }
-
-  // 第二页（卡牌环）：手势光标在某一卡片上停留 3 秒 → 自动跳转（不依赖握拳点击）
-  if (sp > 0.45 && sp < 0.87 && navHoverCard && navHoverCard.userData.navPath) {
-    const path = navHoverCard.userData.navPath
-    if (navHoverCardKey !== path) { navHoverCardKey = path; navHoverCardStart = Date.now() }
-    else if (Date.now() - navHoverCardStart >= 3000 && !document.body.classList.contains('dialog-open')) {
-      navHoverCardKey = null
-      navHoverCardStart = 0
-      vib('medium')        // 悬停触发跳转：中震动反馈
-      router.push({ path, query: { from: 'index', page: '2' } })
-    }
-  } else {
-    navHoverCardKey = null
-    navHoverCardStart = 0
-  }
-}
-
-// 手势「握拳松开」：抬起拖拽（与鼠标抬起等价）
-function onGestureRelease(e) {
-  if (!store.isGesture) return
-  onPtrUp()
-}
-
-// 手势「食指解锁」：保持食指(☝️)3 秒后解锁/解除地球缩放
-function onGestureZoomArmed(e) {
-  zoomArmed.value = e.detail.armed
-  zoomLocked.value = false
-  if (e.detail.armed) {
-    emaDist = null                 // 重新解锁时重置平滑基准
-    lastZoomChangeTime.value = Date.now()
-  }
-}
-
-// 手势「捏合缩放」：第三页用拇指+食指距离控制地球缩放（捏合=放大，张开=缩小）
-// 仅在「食指解锁」且未锁定时生效；其他时间不触发缩放
-function onGesturePinch(e) {
-  if (sp < 0.85) return                          // 仅第三页生效
-  if (!zoomArmed.value || zoomLocked.value) return
-  // EMA 平滑原始距离，滤除逐帧手部抖动（α 越小越平滑）
-  const raw = e.detail.dist
-  if (emaDist === null) emaDist = raw
-  else emaDist += (raw - emaDist) * 0.15
-  const d = emaDist                              // 用平滑值换算缩放
-  const z = Math.max(0, Math.min(1, (d - 0.07) / (0.25 - 0.07)))
-  const prev = cameraZoom
-  cameraZoom = 1.1 + (1 - z) * (5.0 - 1.1)
-  const diff = cameraZoom - prev
-  if (Math.abs(diff) > 1e-3) zoomDir.value = diff > 0 ? 'in' : 'out'
-  // 平滑后静止态相邻帧 diff 极小（约 0.003），主动缩放时明显更大。
-  // 用平滑值的相邻差 > 0.03 判定「在缩放」，重置 2 秒倒计时。
-  if (Math.abs(diff) > 0.03) {
-    lastZoomChangeTime.value = Date.now()
-  }
-}
-
-// 手势「食指进度」：实时回传食指伸出保持进度，用于提示文案
-function onGesturePointHold(e) {
-  pointProgress = e.detail.active ? (e.detail.progress || 0) : 0
-}
-
-// 手掌光标是否落在“向下滚动页面”按钮附近（放宽命中区，便于握拳翻页）
-function hitScrollBtn(x, y, pad = 90) {
-  const el = scrollDownEl.value
-  if (!el) return false
-  const r = el.getBoundingClientRect()
-  return x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad
-}
-
 function onWheel(e) {
   // 弹窗打开时：不拦截滚轮，交由弹窗内容原生滚动，避免翻动底层页面
   if (document.body.classList.contains('dialog-open')) return
   e.preventDefault()
   if (sp > 0.85) {
     // 第三页：滚轮缩放地球，完全不触发翻页
-    const prev = cameraZoom
     cameraZoom = Math.max(1.1, Math.min(5.0, cameraZoom + (e.deltaY > 0 ? 0.18 : -0.18)))
-    // 滚轮是主动操作，每次滚轮都重置计时器
-    lastZoomChangeTime.value = Date.now()
     return
   }
   if (snapLocked) return
@@ -845,43 +494,6 @@ function onTouchEnd(e) {
   if (next === snapPage) return
   snapLocked = true
   snapTo(next)
-}
-
-// ── 移动端双指捏合缩放地球（仅第三页生效）──
-let pinchPrevDist = 0
-let pinching = false
-function pinchDist(e) {
-  const dx = e.touches[0].clientX - e.touches[1].clientX
-  const dy = e.touches[0].clientY - e.touches[1].clientY
-  return Math.hypot(dx, dy)
-}
-function onGlobeTouchStart(e) {
-  if (store.isGesture) return
-  if (sp <= 0.85) return
-  if (e.touches && e.touches.length >= 2) {
-    pinchPrevDist = pinchDist(e)
-    pinching = true
-    globeDragging = false   // 双指时禁用单指旋转
-  }
-}
-function onGlobeTouchMove(e) {
-  if (store.isGesture) return
-  if (sp <= 0.85 || !pinching || !e.touches || e.touches.length < 2) return
-  if (e.cancelable) e.preventDefault()   // 阻止页面随双指滚动/缩放
-  const dist = pinchDist(e)
-  if (pinchPrevDist > 0) {
-    // 双指外扩 → 拉近相机(放大)；内收 → 拉远(缩小)
-    const ratio = dist / pinchPrevDist
-    cameraZoom = Math.max(1.1, Math.min(5.0, cameraZoom / ratio))
-  }
-  pinchPrevDist = dist
-}
-function onGlobeTouchEnd(e) {
-  if (store.isGesture) return
-  if (!e.touches || e.touches.length < 2) {
-    pinchPrevDist = 0
-    pinching = false
-  }
 }
 
 // ── 昼夜灯光/骰子色调：白天暖调（贴合白昼场景），夜晚冷蓝调（贴合夜景）──
@@ -1247,16 +859,6 @@ let orb2CardSpin = 0
 let orb2Base, orb2Cur, orb2Vel, orb2Phase, orb2Rand, orb2Inited = false
 let navCards3D = []
 let navCardAngle = 0
-let navVibStep = 0             // 上次触发震动的量化步进：每跨一步轻震一次，类似塔罗扇形牌区
-// ── 卡牌环拖拽交互 ──
-let navDragActive = false      // 用户正在拖拽卡片环
-let navDragPrevX = 0           // 上次鼠标 X（用于计算速度）
-let navAngularVel = 0          // 惯性速度
-let navDownX = 0, navDownY = 0 // 按下位置（用于区分点击 vs 拖拽）
-let navPendingCard = null      // 按下时击中的卡片路径（点击时跳转）
-const NAV_DRAG_DAMP = 0.96     // 惯性衰减
-const NAV_DRAG_SENS = 0.0025   // 像素→弧度灵敏度
-const NAV_VEL_THRESH = 0.00005  // 惯性停止阈值
 // 预分配帧内复用对象，避免 GC 压力
 const _oRc   = new THREE.Raycaster()
 const _oPlane = new THREE.Plane()
@@ -1269,7 +871,6 @@ const ORBIT_RV     = 0.5          // 垂直幅度（=ORBIT_R 正圆，< 扁椭�
 const ORBIT_TILT   = Math.PI / 7  // 绕 X 轴倾角（给轨道深度感）
 const ORBIT_TILT_Z = Math.PI / -15   // 绕 Z 轴倾角（产生对角倾斜，改此值）
 const ORBIT_Y      = 0.1          // 轨道中心抬高量（正值↑，避免嵌入地面）
-const ORBIT_HOVER_R = 0.16        // 指针射线到轨道环的判定阈值（世界单位，越小越难触发，可调）
 
 // ══════════════════════════════════════════════════════════════
 //  轨道2 参数 —— 所有形状/卡牌调整都在这里
@@ -1320,10 +921,7 @@ const _navMagUp = new THREE.Vector3()
 const _navMagOffset = new THREE.Vector3()
 let navGlowTex = null
 let navHoverCard = null
-let navHoverCardKey = null    // 当前停留的卡片路径（同一卡片连续停留才计时）
-let navHoverCardStart = 0    // 开始停留的时间戳（第二页停留 3 秒自动跳转）
 let animId = null, prevTime = 0
-let globeWrap = null
 let ro = null
 let nightTex = null    // 第一页夜晚背景纹理
 let nightReady = false
@@ -1355,35 +953,6 @@ let curPhase='fall'
 let retFrom2=null, retT=0
 
 const FACE1=new THREE.Quaternion() // 眼睛面正对摄像机，不旋转、不颠倒
-
-// 指针射线到轨道环（倾斜椭圆）的最小距离：用于"鼠标/手指经过轨道"悬停检测
-// 采样椭圆上若干点，取每个点到射线的最近距离的最小值
-function orbitRingDist(ray, cx, cy, cz, R, RV, TX, TZ, expand) {
-  const ox = ray.origin.x, oy = ray.origin.y, oz = ray.origin.z
-  const dx = ray.direction.x, dy = ray.direction.y, dz = ray.direction.z
-  let minD = Infinity
-  const SAMP = 48
-  for (let s = 0; s < SAMP; s++) {
-    const a = (s / SAMP) * Math.PI * 2
-    const px0 = R  * expand * Math.cos(a)
-    const py0 = -RV * expand * Math.sin(a) * Math.sin(TX)
-    const pz0 =  RV * expand * Math.sin(a) * Math.cos(TX)
-    const wx = cx + px0 * Math.cos(TZ) - py0 * Math.sin(TZ)
-    const wy = cy + px0 * Math.sin(TZ) + py0 * Math.cos(TZ)
-    const wz = cz + pz0
-    const vx = wx - ox, vy = wy - oy, vz = wz - oz
-    const t = vx * dx + vy * dy + vz * dz   // 投影到射线方向的参数
-    let d
-    if (t <= 0) {
-      d = Math.sqrt(vx * vx + vy * vy + vz * vz)
-    } else {
-      const rx = ox + dx * t, ry = oy + dy * t, rz = oz + dz * t
-      d = Math.sqrt((wx - rx) ** 2 + (wy - ry) ** 2 + (wz - rz) ** 2)
-    }
-    if (d < minD) minD = d
-  }
-  return minD
-}
 
 // 动态粒子轨道（物理弹簧 + 鼠标扰动）
 function buildOrbitRing() {
@@ -1675,19 +1244,7 @@ function updateNavCardRing(t, dt) {
   const opacity = getNavCardOpacity()
   const visible = opacity > 0.01
   const hoverActive = !!navHoverCard && visible
-  // ── 拖拽惯性衰减 ──
-  if (!navDragActive && !isDragging && Math.abs(navAngularVel) > NAV_VEL_THRESH) {
-    navCardAngle += navAngularVel
-    navAngularVel *= NAV_DRAG_DAMP
-  } else if (Math.abs(navAngularVel) <= NAV_VEL_THRESH) {
-    navAngularVel = 0
-  }
-
-  // ── 无拖拽/惯性时自动旋转（悬停时暂停） ──
-  const noDragActivity = Math.abs(navAngularVel) < NAV_VEL_THRESH && !navDragActive
-  if (noDragActivity) {
-    navCardAngle += dt * NAV_CARD_SPEED * (hoverActive ? 0 : 1)
-  }
+  navCardAngle += dt * NAV_CARD_SPEED * (hoverActive ? 0 : 1)
 
   const cX = Math.cos(NAV_CARD_TILT_X), sX = Math.sin(NAV_CARD_TILT_X)
   const cZ = Math.cos(NAV_CARD_TILT_Z), sZ = Math.sin(NAV_CARD_TILT_Z)
@@ -2083,7 +1640,7 @@ function latLngToXYZ(lat, lng, r) {
 // ── 构建粒子地球 ───────────────────────────────────────────────
 function buildGlobe() {
   globeGroup = new THREE.Group()
-  globeGroup.position.set(globeOffsetX(), 0, 0)
+  globeGroup.position.set(-0.6, 0, 0)
 
   // 球体背景底色（从0淡入，随地球一起显隐）
   globeCore = new THREE.Mesh(
@@ -2245,275 +1802,7 @@ function buildGlobe() {
 
   globeGroup.visible = false
   scene.add(globeGroup)
-
-  buildMarks()   // 占卜数据柱 + 名称气泡
 }
-
-// ── 占卜数据标记：国家质心立 3D 柱（信仰星级+影响力）+ 名称气泡 ──
-function roundRectPath(ctx, x, y, w, h, r) {
-  ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.arcTo(x + w, y,     x + w, y + h, r)
-  ctx.arcTo(x + w, y + h, x,     y + h, r)
-  ctx.arcTo(x,     y + h, x,     y,     r)
-  ctx.arcTo(x,     y,     x + w, y,     r)
-  ctx.closePath()
-}
-
-// 绘制占卜名称气泡贴图；active=true 时边框加粗并由主题色发光
-function renderLabelTexture(sp, active) {
-  const text = sp.userData.text
-  const dpr = 2
-  const fontSize = 24, padX = 18, padY = 10
-  const cv = sp.userData.cv || document.createElement('canvas')
-  sp.userData.cv = cv
-  const ctx = cv.getContext('2d')
-  const fontStr = `400 ${fontSize}px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif`
-  ctx.font = fontStr
-  const tw = ctx.measureText(text).width
-  cv.width = Math.ceil(tw + padX * 2) * dpr
-  cv.height = Math.ceil(fontSize + padY * 2) * dpr
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-  const w = cv.width / dpr, h = cv.height / dpr
-  sp.userData.aspect = w / h
-  ctx.clearRect(0, 0, w, h)
-  const r = h / 2
-  const day = isDay.value
-  const t = currentTheme.value
-  // 昼夜双套配色（用户指定）：
-  //   白天：背景 primaryLight，文字 primary
-  //   黑夜：背景 primary，文字 白色
-  const glow = day ? t.primary : t.primaryLight
-  const [bgR, bgG, bgB] = hexToRgbArr(day ? t.primaryLight : t.primary)
-  const fill = `rgba(${bgR},${bgG},${bgB},0.96)`
-  const textColor = day ? t.primary : '#ffffff'
-  // 药丸形底
-  ctx.fillStyle = fill
-  roundRectPath(ctx, 1, 1, w - 2, h - 2, r)
-  ctx.fill()
-  // 边框：静止态细边；高亮态用主题色加粗并发光（夜间晕影更强）
-  if (active) {
-    ctx.save()
-    ctx.shadowColor = glow
-    ctx.shadowBlur = day ? 16 : 22
-    ctx.lineWidth = 5
-    ctx.strokeStyle = glow
-    roundRectPath(ctx, 2, 2, w - 4, h - 4, r - 1)
-    ctx.stroke()
-    ctx.restore()
-  } else {
-    ctx.lineWidth = 2
-    ctx.strokeStyle = day ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.18)'
-    roundRectPath(ctx, 1, 1, w - 2, h - 2, r)
-    ctx.stroke()
-  }
-  // 文字
-  ctx.fillStyle = textColor
-  ctx.font = fontStr
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(text, w / 2, h / 2 + 1)
-  const tex = sp.userData.tex || new THREE.CanvasTexture(cv)
-  sp.userData.tex = tex
-  tex.anisotropy = 4
-  tex.colorSpace = THREE.SRGBColorSpace
-  tex.needsUpdate = true
-  sp.material.map = tex
-  sp.material.needsUpdate = true
-}
-function setLabelActive(sp, active) {
-  if (sp && sp.userData && sp.userData.text != null) renderLabelTexture(sp, active)
-  // 高亮（悬停/点击）时关闭深度测试并提到最上层，避免被地球/其它柱遮挡
-  if (sp && sp.material) {
-    sp.material.depthTest = !active
-    sp.renderOrder = active ? 11 : 0
-  }
-}
-function makeMarkLabel(text) {
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false }))
-  sp.userData.text = text
-  sp.userData.kind = 'label'
-  renderLabelTexture(sp, false)
-  const worldH = 0.026
-  sp.scale.set(worldH * sp.userData.aspect, worldH, 1)
-  return sp
-}
-
-function buildMarks() {
-  if (!divinationData || !divinationData.records || !globeGroup) return
-  if (globeMarks) { globeGroup.remove(globeMarks); globeMarks = null }
-  markMeshes.length = 0
-
-  const MAX_BAR = 0.12            // 柱最大高度（更短）
-  const RAD = 0.006              // 柱半径
-  const GOLDEN = Math.PI * (3 - Math.sqrt(5))
-  const SPREAD = 3.5             // 同国多记录围绕质心螺旋散开半径（度）：足以分开气泡，又大多留在国境之内
-  const UP = new THREE.Vector3(0, 1, 0)
-  const t = currentTheme.value
-
-  // 按国家分组
-  const byCountry = {}
-  for (const r of divinationData.records) {
-    if (!r.matched || r.lat == null) continue
-    ;(byCountry[r.country] = byCountry[r.country] || []).push(r)
-  }
-
-  const group = new THREE.Group()
-  for (const country in byCountry) {
-    const list = byCountry[country]
-    const k = list.length
-    list.forEach((r, idx) => {
-      // 螺旋散布：idx=0 在质心，其余沿黄金角向外铺开，不重叠
-      const ang = idx * GOLDEN
-      const rad = SPREAD * Math.sqrt(idx / Math.max(1, k - 1))
-      const dLng = Math.cos(ang) * rad
-      const dLat = Math.sin(ang) * rad
-      const base = latLngToXYZ(r.lat + dLat, r.lng + dLng, GLOBE_R * 1.004)
-      const normal = base.clone().normalize()
-
-      // 局部切线帧：right 用于左右并排放两柱
-      const upRef = Math.abs(normal.y) > 0.99 ? new THREE.Vector3(1, 0, 0) : UP
-      const right = new THREE.Vector3().crossVectors(normal, upRef).normalize()
-      const q = new THREE.Quaternion().setFromUnitVectors(UP, normal)
-
-      const faithH = Math.max(0.015, (r.faith / 5) * MAX_BAR)
-      const inflH = Math.max(0.015, (r.influence / 5) * MAX_BAR)
-      const gap = RAD * 2.0   // 两柱中心间距（收紧以减小单记录占用，便于同国多记录聚拢）
-
-      // 底座圆点（位置符号）
-      const dot = new THREE.Mesh(
-        new THREE.SphereGeometry(RAD * 1.6, 8, 8),
-        new THREE.MeshBasicMaterial({ color: t.primary, transparent: true })
-      )
-      dot.position.copy(base)
-      dot.userData.record = r; dot.userData.kind = 'dot'
-      group.add(dot); markMeshes.push(dot)
-
-      // 信仰星级柱（左）
-      const faithCenter = base.clone().addScaledVector(right, -gap / 2)
-      const faithMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(RAD, RAD, faithH, 10),
-        new THREE.MeshBasicMaterial({ color: t.primaryDark, transparent: true })
-      )
-      faithMesh.position.copy(faithCenter).addScaledVector(normal, faithH / 2)
-      faithMesh.quaternion.copy(q)
-      faithMesh.userData.record = r; faithMesh.userData.kind = 'faith'
-      group.add(faithMesh); markMeshes.push(faithMesh)
-
-      // 影响力柱（右）
-      const inflCenter = base.clone().addScaledVector(right, gap / 2)
-      const inflMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(RAD, RAD, inflH, 10),
-        new THREE.MeshBasicMaterial({ color: t.primary, transparent: true })
-      )
-      inflMesh.position.copy(inflCenter).addScaledVector(normal, inflH / 2)
-      inflMesh.quaternion.copy(q)
-      inflMesh.userData.record = r; inflMesh.userData.kind = 'infl'
-      group.add(inflMesh); markMeshes.push(inflMesh)
-
-      // 占卜名称气泡（置于两柱中间上方，可点击弹出介绍）
-      const label = makeMarkLabel(r.name)
-      const topH = Math.max(faithH, inflH)
-      label.position.copy(base).addScaledVector(normal, topH + 0.045)
-      label.userData.record = r
-      group.add(label); markMeshes.push(label)
-    })
-  }
-  globeGroup.add(group)
-  globeMarks = group
-}
-
-function recolorMarks() {
-  if (!globeMarks) return
-  const t = currentTheme.value
-  globeMarks.traverse(o => {
-    const k = o.userData && o.userData.kind
-    // 占卜名称气泡的配色由纹理（renderLabelTexture）按昼夜绘制，不在这里染色，
-    // 否则 material.color 会常数倍乘纹理，把昼夜差异洗掉，导致切换看起来“不变”
-    if (!k || k === 'label') return
-    const c = k === 'infl' ? t.primary
-            : k === 'faith' ? t.primaryDark
-            : t.primary
-    if (o.material && o.material.color) o.material.color.set(c)
-  })
-  // 主题/昼夜切换时，重绘全部名称气泡（颜色与昼夜态同步刷新，含静止态的深浅反色）
-  for (const m of markMeshes) {
-    if (m.userData && m.userData.kind === 'label') {
-      if (m.material && m.material.color) m.material.color.set('#ffffff')  // 纹理已含配色，材质色须为白避免倍乘
-      renderLabelTexture(m, m === hoveredLabel || m === clickedLabel)
-    }
-  }
-}
-
-const _pickRay = new THREE.Raycaster()
-const _pickRay2 = new THREE.Raycaster()
-const _pickNDC = new THREE.Vector2()
-function pickMark(cx, cy) {
-  if (!globeMarks || !renderer || !camera) return null
-  const rect = renderer.domElement.getBoundingClientRect()
-  const nx = ((cx - rect.left) / rect.width) * 2 - 1
-  const ny = -((cy - rect.top) / rect.height) * 2 + 1
-  _pickNDC.set(nx, ny)
-  _pickRay.setFromCamera(_pickNDC, camera)
-  const hits = _pickRay.intersectObjects(markMeshes, false)
-  return hits.length ? hits[0].object.userData.record : null
-}
-function pickMarkMesh(cx, cy) {
-  if (!globeMarks || !renderer || !camera) return null
-  const rect = renderer.domElement.getBoundingClientRect()
-  const nx = ((cx - rect.left) / rect.width) * 2 - 1
-  const ny = -((cy - rect.top) / rect.height) * 2 + 1
-  _pickNDC.set(nx, ny)
-  _pickRay2.setFromCamera(_pickNDC, camera)
-  const hits = _pickRay2.intersectObjects(markMeshes, false)
-  return hits.length ? hits[0].object : null
-}
-
-function openMarkCard(r) {
-  if (!r) return
-  selectedMark.value = r
-  markCardOpen.value = true
-  document.body.classList.add('dialog-open')
-  vib('medium')   // 点击标签出卡片的震动反馈
-}
-function closeMarkCard() {
-  markCardOpen.value = false
-  selectedMark.value = null
-  cardDragActive = false
-  document.body.classList.remove('dialog-open')
-  if (clickedLabel) { setLabelActive(clickedLabel, false); clickedLabel = null }
-}
-
-// 卡片展示的全部字段（顺序即展示顺序；name/国家/星级/图片/链接单独处理）
-const markFieldMeta = [
-  { label: '别名/英文名', key: 'alias' },
-  { label: '主要流行国家/地区', key: 'popularCountries' },
-  { label: '起源国家', key: 'originCountry' },
-  { label: '流行地区', key: 'region' },
-  { label: '起源年代', key: 'origin' },
-  { label: '时代分段', key: 'era' },
-  { label: '文明分类大类', key: 'civCategory' },
-  { label: '文明/文化圈', key: 'culture' },
-  { label: '文明大类核心特点', key: 'civFeature' },
-  { label: '原理归属大类', key: 'principleCategory' },
-  { label: '原理分类核心说明', key: 'principleNote' },
-  { label: '核心功能', key: 'function' },
-  { label: '使用载体/工具', key: 'tool' },
-  { label: '使用阶层', key: 'cls' },
-  { label: '占卜原理', key: 'principle' },
-  { label: '起源传说/背景', key: 'legend' },
-  { label: '详细介绍', key: 'intro' },
-  { label: '历史演化', key: 'evolution' },
-  { label: '主要分支', key: 'branches' },
-  { label: '与其他占卜方式的关系', key: 'relations' }
-]
-const markSections = computed(() => {
-  const m = selectedMark.value
-  if (!m) return []
-  return markFieldMeta
-    .map(f => ({ label: f.label, value: m[f.key] }))
-    .filter(s => s.value != null && String(s.value).trim() !== '')
-})
 
 // ── 粒子过渡：骰子面采样 ─────────────────────────────────────
 function sampleDiceSurface(n) {
@@ -2815,7 +2104,6 @@ function recolorGlobe() {
     }
     globeLandTex.needsUpdate = true
   }
-  recolorMarks()   // 占卜数据柱随主题/昼夜换色
 }
 
 // ── 骰子整体不透明度（用于淡入淡出） ─────────────────────────────
@@ -2909,16 +2197,9 @@ function onResize(W, H) {
   camera.aspect = W/H; camera.updateProjectionMatrix()
   renderer.setSize(W, H)
   CAMERA_DEFAULT.z = responsiveCamZ(W)   // 屏宽变化时同步相机基准距离
-  if (globeGroup) globeGroup.position.x = globeOffsetX()  // 横竖屏切换时地球居中/偏左
-  if (particleSystem) particleSystem.position.copy(globeGroup.position)  // 过渡粒子系统跟随地球位置
-  // 横竖屏切换（方向变化）时重算地球默认距离，保证完整可见；地址栏伸缩(方向不变)不重设，保留用户缩放
-  const aspect = W / H
-  if (lastAspect > 0 && (aspect < 1) !== (lastAspect < 1)) cameraZoom = globeFitCamZ()
-  lastAspect = aspect
   fitNightPlane()
   fitHandPlane()
 }
-let lastAspect = 0
 
 // 按「图片原比例 + 视口比例」做 contain，平面填满视野但图片不被拉伸；
 // 多出的边由 scene.background 的纯色兜底，保证夜晚氛围不露白
@@ -2967,42 +2248,33 @@ function updateHandTransform() {
   handPlane.quaternion.copy(_handQuat)
 }
 
-function onPtrDown(cx, cy){
+function onPtrDown(e){
+  const cx0=e.clientX??e.touches?.[0]?.clientX??0
+  const cy0=e.clientY??e.touches?.[0]?.clientY??0
   if (sp > 0.85) {
     // 第三页：拖拽原地旋转地球
     globeDragging  = true
-    globeDragLastX = cx
-    globeDragLastY = cy
-    markDragActive = true
-    markDragMoved  = 0
-    markDownX = cx
-    markDownY = cy
+    globeDragLastX = cx0
+    globeDragLastY = cy0
     return
   }
 
-  // ── 第二页：记录拖拽起点 + 延迟卡牌点击（在 onPtrUp 区分点击/拖拽） ──
-  navDownX = cx; navDownY = cy
-  navPendingCard = null
-  navDragActive = false
-  if (sp > 0.45 && sp < 0.87) {
-    navDragActive = true
-    navDragPrevX = cx
-  }
-
+  const cx=e.clientX??e.touches?.[0]?.clientX??0
+  const cy=e.clientY??e.touches?.[0]?.clientY??0
   const el=mountEl.value
   if(el && dice2 && camera && renderer){
     const cvRect=renderer.domElement.getBoundingClientRect()
     _oNDC.set((cx-cvRect.left)/el.clientWidth*2-1, -((cy-cvRect.top)/el.clientHeight*2-1))
     _oRc.setFromCamera(_oNDC, camera)
 
-    // 第二页：仅记录点击的卡牌（不立即跳转），交给 onPtrUp 判断是点击还是拖拽
-    if (sp > 0.45 && sp < 0.87 && getNavCardOpacity() > 0.55) {
-      const cardHits = _oRc.intersectObjects(navCards3D, false)
-      if (cardHits.length > 0) {
-        const diceHits = _oRc.intersectObject(dice2, true)
-        if (diceHits.length === 0 || cardHits[0].distance < diceHits[0].distance) {
-          navPendingCard = cardHits[0].object.userData.navPath
-        }
+    // 第二页功能卡牌：真实 Three.js 射线点击；若骰子挡在前面，则不会点到后方卡牌
+    const cardHits = getNavCardOpacity() > 0.55 ? _oRc.intersectObjects(navCards3D, false) : []
+    if (cardHits.length > 0) {
+      const diceHits = _oRc.intersectObject(dice2, true)
+      if (diceHits.length === 0 || cardHits[0].distance < diceHits[0].distance) {
+        const path = cardHits[0].object.userData.navPath
+        if (path) router.push({ path, query: { from: 'index', page: '2' } })
+        return
       }
     }
 
@@ -3014,7 +2286,9 @@ function onPtrDown(cx, cy){
   isDragging=true
   dragLastX=cx; dragLastY=cy; dragQuat.identity()
 }
-function onPtrMove(cx, cy){
+function onPtrMove(e){
+  const cx=e.clientX??e.touches?.[0]?.clientX??mouseX
+  const cy=e.clientY??e.touches?.[0]?.clientY??mouseY
   mouseX=cx; mouseY=cy
 
   const el=mountEl.value
@@ -3049,99 +2323,25 @@ function onPtrMove(cx, cy){
     const dx = cx - globeDragLastX
     const dy = cy - globeDragLastY
     globeDragLastX = cx; globeDragLastY = cy
-    const d = Math.hypot(dx, dy)
-    markDragMoved += d
-    // 转动地球时轻微震动反馈：累计位移达阈值触发一次轻震，避免每帧连续震
-    if (d > 0) {
-      globeVibAccum += d
-      if (globeVibAccum >= 12) { globeVibAccum = 0; try { navigator.vibrate && navigator.vibrate(12) } catch (e) {} }
-    }
     globeGroup.rotation.y += dx * 0.005
     globeGroup.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2,
       globeGroup.rotation.x + dy * 0.005))
     if (particleSystem?.visible) particleSystem.rotation.copy(globeGroup.rotation)
     return
   }
-
-  // ── 第二页卡牌环拖拽旋转 ──
-  if (navDragActive && !isDragging && !globeDragging && sp > 0.45 && sp < 0.87) {
-    const dx = cx - navDragPrevX
-    navDragPrevX = cx
-    navAngularVel = dx * NAV_DRAG_SENS
-    navCardAngle += navAngularVel   // 右拖 = 顺时针旋转
-    // 拖动旋转时：把角度量化成步进，每跨一步轻震一次，手感同塔罗扇形牌区
-    const vStep = Math.round(navCardAngle / 0.10)
-    if (vStep !== navVibStep) {
-      navVibStep = vStep
-      vib('light')
-    }
-    return
-  }
-
-  // ── 第三页占卜柱/名称悬停：停转地球 + 高亮 + 弹出星级提示 ──
-  if (globeGroup && globeGroup.visible) {
-    const hit = pickMarkMesh(cx, cy)
-    const rec = hit && hit.userData.record ? hit : null
-    const lbl = rec && hit.userData.kind === 'label' ? hit : null
-    // 名称气泡高亮切换（加粗边框 + 主题色发光）
-    if (lbl !== hoveredLabel) {
-      if (hoveredLabel && hoveredLabel !== clickedLabel) setLabelActive(hoveredLabel, false)
-      if (lbl) setLabelActive(lbl, true)
-      hoveredLabel = lbl
-    }
-    if (rec) {
-      hoveredMarkMesh = (hit.userData.kind && hit.userData.kind !== 'label') ? hit : null
-      markHover.value = { record: rec.userData.record, kind: hit.userData.kind || 'label' }
-      hoverTip.value = { x: cx, y: cy }
-    } else {
-      if (hoveredLabel && hoveredLabel !== clickedLabel) setLabelActive(hoveredLabel, false)
-      hoveredLabel = null
-      hoveredMarkMesh = null
-      markHover.value = null
-    }
-  } else if (hoveredLabel) {
-    if (hoveredLabel !== clickedLabel) setLabelActive(hoveredLabel, false)
-    hoveredLabel = null
-  }
-
   if(!isDragging) return
   const dx=cx-dragLastX, dy=cy-dragLastY
   dragLastX=cx; dragLastY=cy
   const dq=new THREE.Quaternion().setFromEuler(new THREE.Euler(dy*.016, dx*.016, 0))
   dragQuat.premultiply(dq)
 }
-function onPtrUp(cx, cy){
-  if (pinching) { pinching = false; globeDragging = false; return }  // 双指捏合结束，不视为点击
+function onPtrUp(){
   globeDragging = false
-  navDragActive = false
   navHoverCard = null
   for (const card of navCards3D) {
     card.userData.targetMagX = 0
     card.userData.targetMagY = 0
   }
-
-  // ── 第三页地球：拖拽位移很小 → 视为点击占卜柱/名称气泡，弹出介绍卡片 ──
-  if (markDragActive && markDragMoved < 8) {
-    const obj = pickMarkMesh(markDownX, markDownY)
-    if (obj && obj.userData.record) {
-      if (obj.userData.kind === 'label') {
-        if (clickedLabel && clickedLabel !== obj) setLabelActive(clickedLabel, false)
-        clickedLabel = obj
-        setLabelActive(obj, true)
-      }
-      openMarkCard(obj.userData.record)
-    }
-  }
-  markDragActive = false
-
-  // 第二页卡牌：鼠标/触摸点击（按下到松开位移很小，且之前命中了卡牌）→ 跳转 + 中震动反馈
-  if (navPendingCard && Math.hypot(cx - navDownX, cy - navDownY) < 8 && !document.body.classList.contains('dialog-open')) {
-    vib('medium')
-    router.push({ path: navPendingCard, query: { from: 'index', page: '2' } })
-  }
-  navPendingCard = null
-  fistDragMode = false  // 松手后复位（保留变量以防其它分支引用）
-
   if(!isDragging) return
   isDragging=false
   baseQuat2.premultiply(dragQuat)
@@ -3150,32 +2350,10 @@ function onPtrUp(cx, cy){
   retT=0; curPhase='returning'
 }
 
-// 真实鼠标/触摸事件的包装器：手势模式下完全由光球驱动，忽略真实指针，避免两套输入互相抢光标
-function onPtrDownEvt(e){
-  if (store.isGesture) return
-  onPtrDown(e.clientX ?? e.touches?.[0]?.clientX ?? 0, e.clientY ?? e.touches?.[0]?.clientY ?? 0)
-}
-function onPtrMoveEvt(e){
-  if (store.isGesture) return
-  onPtrMove(e.clientX ?? e.touches?.[0]?.clientX ?? mouseX, e.clientY ?? e.touches?.[0]?.clientY ?? mouseY)
-}
-function onPtrUpEvt(e){
-  if (store.isGesture) return
-  const x = e.clientX ?? e.changedTouches?.[0]?.clientX ?? mouseX
-  const y = e.clientY ?? e.changedTouches?.[0]?.clientY ?? mouseY
-  onPtrUp(x, y)
-}
-
 function animate(now){
   animId=requestAnimationFrame(animate)
   const dt=Math.min((now-prevTime)/1000,.05); prevTime=now
   const t = now / 1000
-
-  // 地球缩放：解锁后若静止（不再改变大小）满 2 秒，则自动锁定大小
-  if (zoomArmed.value && !zoomLocked.value && Date.now() - lastZoomChangeTime.value > 2000) {
-    zoomLocked.value = true
-    document.dispatchEvent(new CustomEvent('gesture-zoom-locked'))
-  }
 
   // ── 滚动驱动：背景 ─────────────────────────────────
   scrollLerp += (scrollTarget - scrollLerp) * 0.06
@@ -3188,7 +2366,7 @@ function animate(now){
     if (nightPlane) nightPlane.visible = false          // 第一页背景交给 DOM 图层 .ds-pagebg1
     // 前景「手」：随离开第1页的进度平滑淡出，到第二页完全消失
     if (handPlane) {
-      const fade = onPage1 ? (1 - sp * 8 ): 0
+      const fade = onPage1 ? (1 - sp * 2) : 0
       handPlane.visible = handReady && fade > 0.01
       handPlane.material.opacity = fade
     }
@@ -3224,38 +2402,8 @@ function animate(now){
         globeLines.material.opacity = gOpacity * 0.72
         if (globeCore) globeCore.material.opacity = gOpacity * GLOBE_CORE_OPACITY
         if (globeLandOverlay) globeLandOverlay.material.opacity = gOpacity * GLOBE_CORE_OPACITY
-        if (globeMarks) globeMarks.traverse(o => { if (o.material) o.material.opacity = gOpacity })
       }
-      // 拖拽或悬停时停止自转；停止交互 3 秒后恢复自转
-      const interacting = globeDragging || !!markHover.value
-      if (interacting) lastGlobeInteract = now
-      if (particlePhase !== 'reversing' && (now - lastGlobeInteract) > 3000) globeGroup.rotation.y += dt * 0.10
-
-      // 悬停高亮：被悬停的占卜柱加粗+增亮，其余回弹
-      if (globeMarks) {
-        const hm = hoveredMarkMesh
-        // 柱体高亮时关闭深度测试并置于上层（renderOrder 10），名称卡片用 11 盖在柱体之上
-        if (hm !== prevHoverMesh) {
-          if (prevHoverMesh && prevHoverMesh.material) {
-            prevHoverMesh.material.depthTest = true
-            prevHoverMesh.renderOrder = 0
-          }
-          if (hm && hm.material) {
-            hm.material.depthTest = false
-            hm.renderOrder = 10
-          }
-          prevHoverMesh = hm
-        }
-        globeMarks.traverse(o => {
-          // 跳过名称气泡：它由贴图重绘高亮，不能用柱体的 scale 方式（scale.y=1 会让 sprite 变得巨大）
-          if (!o.userData || !o.userData.kind || o.userData.kind === 'label') return
-          const target = (o === hm) ? 1.8 : 1
-          const cur = o.scale.x
-          const ns = cur + (target - cur) * 0.18
-          o.scale.set(ns, 1, ns)
-          if (o === hm && o.material) o.material.opacity = Math.min(1, o.material.opacity * 1.5)
-        })
-      }
+      if (!globeDragging && particlePhase !== 'reversing') globeGroup.rotation.y += dt * 0.10
 
       // 呼吸 + 鼠标悬停（始终更新）
       globeSurface.material.uniforms.uTime.value = now * 0.001
@@ -3295,8 +2443,6 @@ function animate(now){
       const p = rawP < 0.5 ? 2 * rawP * rawP : 1 - 2 * (1 - rawP) * (1 - rawP)
       particleSystem.material.uniforms.uProgress.value = p
       particleSystem.rotation.y += dt * 0.06
-      // 过渡粒子系统从骰子位置精确插值到地球位置：起点对齐骰子、终点对齐地球
-      particleSystem.position.lerpVectors(dice2.position, globeGroup.position, p)
 
       // 骰子渐隐：前 DICE_FADE_MS 毫秒线性淡出
       const diceFadeT = Math.min(1, (now - diceFadeStart) / DICE_FADE_MS)
@@ -3329,15 +2475,11 @@ function animate(now){
     if (sp < 0.65 && particlePhase === 'globe') {
       particlePhase = 'reversing'
       reverseStartTime = now
-      reverseStartPos.copy(globeGroup.position)   // 记录倒放起点（地球当前位置）
       globeSurface.material.uniforms.uMorphT.value = 0
       globeSurface.material.uniforms.uOpacity.value = GLOBE_PARTICLE_OPACITY
       globeSurface.material.uniforms.uHoverPoint.value.set(0, 100, 0)
       globeLines.material.opacity = 0.72
-      if (globeCore) {
-        globeCore.material.opacity = GLOBE_CORE_OPACITY
-        globeCore.material.depthWrite = false   // 倒放时关闭深度写入，避免实体球遮挡向中心聚拢的粒子
-      }
+      if (globeCore) globeCore.material.opacity = GLOBE_CORE_OPACITY
       if (globeLandOverlay) globeLandOverlay.material.opacity = GLOBE_CORE_OPACITY
       dice2.visible = false
       // 轨道从屏幕外开始收拢（scale 8 → 1，opacity 0 → 1）
@@ -3372,23 +2514,23 @@ function animate(now){
       const rawP  = Math.min(1, (now - reverseStartTime) / PARTICLE_MS)
       const morphT = rawP < 0.5 ? 2 * rawP * rawP : 1 - 2 * (1 - rawP) * (1 - rawP)
       globeSurface.material.uniforms.uMorphT.value = morphT
+
       // 轨道收拢：scale 8→1，opacity 在后 40% 淡入
       orbitExpandScale = Math.max(1, 8 * (1 - rawP))
       setOrbitOpacity(Math.max(0, (rawP - 0.6) / 0.4))
 
-      // 背景地球（含地形粒子）从倒放起点精确插值到骰子位置，终点与骰子完全对齐（无滞后/偏移）
-      globeGroup.position.lerpVectors(reverseStartPos, dice2.position, morphT)
+      // globeGroup 慢慢漂向骰子当前位置，使粒子收拢处和骰子出现处对齐
+      const _tp = new THREE.Vector3(dice2.position.x, dice2.position.y, 0)
+      globeGroup.position.lerp(_tp, dt * 1.0)
 
-      // 轮廓线 + 背景球体 + 陆地色 + 占卜柱 随变形同步渐隐（分母越大，粒子留得越久，与骰子淡入重叠越多）
-      const lineFade = Math.max(0, 1.0 - morphT / 0.55)
+      // 轮廓线 + 背景球体随变形渐隐
+      const lineFade = Math.max(0, 1.0 - morphT / 0.35)
       globeLines.material.opacity = 0.72 * lineFade
       if (globeCore) globeCore.material.opacity = GLOBE_CORE_OPACITY * lineFade
-      if (globeLandOverlay) globeLandOverlay.material.opacity = GLOBE_CORE_OPACITY * lineFade
-      if (globeMarks) globeMarks.traverse(o => { if (o.material) o.material.opacity = lineFade })
 
-      // 骰子提前淡入，与仍在淡出的粒子重叠（起点 0.45，用剩余 55% 渐显）
-      if (rawP > 0.8) {
-        const t = (rawP - 0.8) / 0.2
+      // 骰子在粒子淡出的后半段淡入
+      if (rawP > 0.7) {
+        const t = (rawP - 0.7) / 0.3
         dice2.visible = true
         setDiceOpacity(t * t)
       }
@@ -3401,12 +2543,10 @@ function animate(now){
         setOrbitOpacity(1.0)
         orbitExpandScale = 1.0
         globeGroup.visible = false
-        globeGroup.position.set(globeOffsetX(), 0, 0)
+        globeGroup.position.set(-0.6, 0, 0)
         if (globeSurface) { globeSurface.material.uniforms.uOpacity.value = 0; globeSurface.material.uniforms.uMorphT.value = 0 }
         if (globeLines)   globeLines.material.opacity = 0
-        if (globeCore)    { globeCore.material.opacity  = 0; globeCore.material.depthWrite = true }
-        if (globeLandOverlay) globeLandOverlay.material.opacity = 0
-        if (globeMarks) globeMarks.traverse(o => { if (o.material) o.material.opacity = 0 })
+        if (globeCore)    globeCore.material.opacity  = 0
         cameraZoom = CAMERA_DEFAULT.z
       }
     }
@@ -3422,13 +2562,9 @@ function animate(now){
       fallVY2 -= 9.8*dt; fallY2 += fallVY2*dt
     }
     if(fallY2 <= 0 && fallVY2 < 0){
-      const iv = Math.abs(fallVY2)            // 落地冲击速度
       fallY2 = 0; fallBounces2++
-      fallVY2 = iv * 0.34
+      fallVY2 = Math.abs(fallVY2) * 0.34
       fallAVX2 *= 0.72; fallAVY2 *= 0.72; fallAVZ2 *= 0.60
-      // 每次落地播放撞击/掉落声（参考 Dice.vue 的 playBounce）
-      if(iv > 1.5) playBounce(iv)
-      if(iv > 1.5) vib('heavy')   // 首页骰子落地重震动，与骰子页面（Dice.vue）投掷掉落震动一致
     }
     dice2.position.y = fallY2 + DICE_PAGE1_Y_OFFSET   // 掉落落点 = 第一页偏移位置
     if(fallBounces2 >= 1 && fallY2 <= 0.005){
@@ -3480,8 +2616,7 @@ function animate(now){
   // 骰子只在 page2→page3（sp 0.5→1.0）阶段移动，page1→page2 保持原位
   if (curPhase === 'interactive' || curPhase === 'returning') {
     const pathT = Math.max(0, (sp - 0.5) * 2)   // sp<0.5 → 0，sp=1 → 1
-    // 骰子终点 x 跟随地球位置：桌面/横屏地球偏左(-0.6)→骰子左移落入；竖屏手机地球居中(0)→骰子不左移
-    const sdx = cubicBez(pathT, DICE_PATH_X[0], DICE_PATH_X[1], DICE_PATH_X[2], globeOffsetX())
+    const sdx = cubicBez(pathT, DICE_PATH_X[0], DICE_PATH_X[1], DICE_PATH_X[2], DICE_PATH_X[3])
     const sdy = cubicBez(pathT, DICE_PATH_Y[0], DICE_PATH_Y[1], DICE_PATH_Y[2], DICE_PATH_Y[3])
     // 首页第一页骰子整体下移：sp<0.42 全量，sp 0.42→0.5 平滑淡出；第二页起无偏移（其他页位置不变）
     const page1Off = sp < 0.5
@@ -3593,23 +2728,6 @@ function animate(now){
         const hasMouse = !isDragging && curPhase === 'interactive'
         const _rox = _oRc.ray.origin.x,    _roy = _oRc.ray.origin.y,    _roz = _oRc.ray.origin.z
         const _rdx = _oRc.ray.direction.x, _rdy = _oRc.ray.direction.y, _rdz = _oRc.ray.direction.z
-
-        // ── 轨道悬停音效：指针/手指经过轨道环（轨道1 或 轨道2）时触发一次（参考 orbitTick + 轻震动）
-        {
-          const cxo = dice2.position.x, czo = dice2.position.z, cyo = dice2.position.y
-          const d1 = orbitRingDist(_oRc.ray, cxo, cyo + ORBIT_Y,  czo, ORBIT_R,  ORBIT_RV,  ORBIT_TILT,  ORBIT_TILT_Z,  orbitExpandScale)
-          const d2 = orbitRingDist(_oRc.ray, cxo, cyo + ORBIT2_Y, czo, ORBIT2_R, ORBIT2_RV, ORBIT2_TILT, ORBIT2_TILT_Z, orbitExpandScale)
-          const hovering = hasMouse && (d1 < ORBIT_HOVER_R || d2 < ORBIT_HOVER_R)
-          if (hovering) {
-            const now = performance.now()
-            // 仅在"进入轨道"的瞬间触发，并与上次间隔 600ms 节流，避免快速连发
-            if (!orbitHovering && now - lastOrbitHoverT > 600) { playOrbit(); lastOrbitHoverT = now }
-            orbitHovering = true
-          } else {
-            orbitHovering = false
-          }
-        }
-
         const VEL_AMP  = 0.00017, DRIFT_F  = 0.22, VEL_TAU  = 0.013
         const DAMP     = 0.94,    SPRING_K = 0.035, REP_R = 0.34, REP_F = 0.004
         for (let i = 0; i < ORBIT_N; i++) {
@@ -3813,26 +2931,14 @@ onMounted(async ()=>{
     root.addEventListener('touchstart', onTouchStart, { passive: true })
     root.addEventListener('touchend', onTouchEnd, { passive: true })
   }
-  // 手势：第一/二页握拳拖拽骰子/轨道、点“向下滚动页面”翻页；第三页捏合缩放地球；悬停驱动光标
-  document.addEventListener('gesture-click', onGestureClick)
-  document.addEventListener('gesture-pinch', onGesturePinch)
-  document.addEventListener('gesture-hover', onGestureHover)
-  document.addEventListener('gesture-release', onGestureRelease)
-  document.addEventListener('gesture-zoom-armed', onGestureZoomArmed)
-  document.addEventListener('gesture-point-hold', onGesturePointHold)
-  document.addEventListener('gesture-trigger', onGestureTrigger)
-  document.addEventListener('gesture-fist-drag', onGestureFistDrag)
 
-  globeWrap=el.parentElement||el
-  globeWrap.addEventListener('mousedown',   onPtrDownEvt)
-  globeWrap.addEventListener('touchstart',  onPtrDownEvt, {passive:true})
-  globeWrap.addEventListener('touchstart',  onGlobeTouchStart, {passive:true})
-  window.addEventListener('touchmove', onGlobeTouchMove, {passive:false})
-  window.addEventListener('touchend',  onGlobeTouchEnd, {passive:true})
-  window.addEventListener('mousemove', onPtrMoveEvt)
-  window.addEventListener('touchmove', onPtrMoveEvt, {passive:true})
-  window.addEventListener('mouseup',   onPtrUpEvt)
-  window.addEventListener('touchend',  onPtrUpEvt)
+  const wrap=el.parentElement||el
+  wrap.addEventListener('mousedown',   onPtrDown)
+  wrap.addEventListener('touchstart',  onPtrDown, {passive:true})
+  window.addEventListener('mousemove', onPtrMove)
+  window.addEventListener('touchmove', onPtrMove, {passive:true})
+  window.addEventListener('mouseup',   onPtrUp)
+  window.addEventListener('touchend',  onPtrUp)
 
   // 漂浮汉字探照灯：跟随光标照亮背景中的隐藏汉字
   document.addEventListener('pointermove', onLampMove, { passive: true })
@@ -3855,19 +2961,6 @@ onMounted(async ()=>{
   // 持久化昼夜：按当前昼/夜状态同步灯光与骰子冷/暖调（默认初始化为暖白，夜间需改冷）
   applyDayNightLighting()
   stopPageQueryWatch = watch(() => route.query?.page, (v) => applyShowcaseQueryPage(v, route.query?.from))
-  // 文案中英轮换：每 10 秒渐隐→切换语言→渐显
-  captionTimer = setInterval(() => {
-    captionFading.value = true                      // 先渐隐
-    setTimeout(() => {
-      captionEn.value = !captionEn.value            // 隐完切换语言
-      captionFading.value = false                   // 再渐显
-    }, 1800)
-  }, 10000)
-  // 首次任意交互后恢复 AudioContext，确保首页自动掉落音效不被浏览器自动播放策略静音
-  const resumeOnce = () => resumeAudio()
-  ;['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev =>
-    window.addEventListener(ev, resumeOnce, { once: true, passive: true })
-  )
 })
 
 onUnmounted(()=>{
@@ -3881,23 +2974,12 @@ onUnmounted(()=>{
   rootEl.value?.removeEventListener('wheel', onWheel)
   rootEl.value?.removeEventListener('touchstart', onTouchStart)
   rootEl.value?.removeEventListener('touchend', onTouchEnd)
-  document.removeEventListener('gesture-click', onGestureClick)
-  document.removeEventListener('gesture-pinch', onGesturePinch)
-  document.removeEventListener('gesture-hover', onGestureHover)
-  document.removeEventListener('gesture-release', onGestureRelease)
-  document.removeEventListener('gesture-zoom-armed', onGestureZoomArmed)
-  document.removeEventListener('gesture-point-hold', onGesturePointHold)
-  document.removeEventListener('gesture-trigger', onGestureTrigger)
-  document.removeEventListener('gesture-fist-drag', onGestureFistDrag)
   stopPageQueryWatch?.()
   ro?.disconnect()
-  window.removeEventListener('mousemove',onPtrMoveEvt)
-  window.removeEventListener('touchmove',onPtrMoveEvt)
-  window.removeEventListener('mouseup',  onPtrUpEvt)
-  window.removeEventListener('touchend', onPtrUpEvt)
-  globeWrap.removeEventListener('touchstart', onGlobeTouchStart)
-  window.removeEventListener('touchmove', onGlobeTouchMove)
-  window.removeEventListener('touchend',  onGlobeTouchEnd)
+  window.removeEventListener('mousemove',onPtrMove)
+  window.removeEventListener('touchmove',onPtrMove)
+  window.removeEventListener('mouseup',  onPtrUp)
+  window.removeEventListener('touchend', onPtrUp)
   document.removeEventListener('pointermove', onLampMove)
   document.removeEventListener('mousemove',   onLampMove)
   document.removeEventListener('pointerleave', onLampLeave)
@@ -3911,25 +2993,13 @@ onUnmounted(()=>{
 .help-popup {
   background-color: rgba(255,255,255,0.7);  /* 半透明白底玻璃感（昼夜统一）；黑夜由 .app-shell.dark .help-popup 的 !important 黑底覆盖，文字不再被整体 opacity 调暗 */
 }
+
 .ds-root {
   position: absolute;
   inset: 0;
   overflow-y: auto;
   /* 隐藏原生滚动条：WebGL 合成层会将其遮盖，用 .ds-scrollbar 替代 */
   scrollbar-width: none;
-}
-/* 首页鼠标指针：第一、二页显示星星 ✦，覆盖全屏 canvas 的 grab 光标使其可见，热点居中，失败回退 auto */
-/* 夜晚（默认）：白色星星 + 黑描边，暗背景上清晰 */
-.ds-cursor-star,
-.ds-cursor-star .ds-wrap,
-.ds-cursor-star .ds-wrap:active {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ctext x='14' y='16' font-size='22' text-anchor='middle' dominant-baseline='central' fill='white' stroke='black' stroke-width='0.7'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E") 14 14, auto;
-}
-/* 白天（.is-day）：黑色星星 + 白描边，亮背景上清晰 */
-.ds-cursor-star.is-day,
-.ds-cursor-star.is-day .ds-wrap,
-.ds-cursor-star.is-day .ds-wrap:active {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ctext x='14' y='16' font-size='22' text-anchor='middle' dominant-baseline='central' fill='black' stroke='white' stroke-width='0.7'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E") 14 14, auto;
 }
 .ds-root::-webkit-scrollbar { display: none; }
 
@@ -3938,73 +3008,6 @@ onUnmounted(()=>{
   height: 100dvh;
   position: relative;
   background: transparent;  /* canvas 负责背景色 */
-}
-
-/* 第一页骰子下方文案：不参与交互，置于画布之上、呼吸灯之下 */
-.ds-dice-caption {
-  position: fixed;
-  left: 50%;
-  top: 80%;        /* ← 桌面端竖向位置：调大=更靠下（如 68% / 72%），调小=更靠上 */
-  transform: translateX(-50%);
-  z-index: 20;
-  pointer-events: none;
-  text-align: center;
-  user-select: none;
-  width: 90%;
-  max-width: 480px;
-  font-family: "Songti SC", "STSong", "SimSun", "宋体", serif;  /* 宋体 */
-  opacity: 0;                                   /* 默认隐藏，滚动到第一页才渐入 */
-  visibility: hidden;
-  transition: opacity 0.7s ease, visibility 0s linear 0.7s;  /* 渐入渐隐 0.7s */
-}
-/* 仅第一页：渐入至 70% 不透明度 */
-.ds-dice-caption.is-visible {
-  opacity: 0.7;
-  visibility: visible;
-  transition: opacity 0.7s ease, visibility 0s linear 0s;
-}
-.ds-dice-caption-line1 {
-  /* 纯比例自适应（同骰子）：随视口长边缩放，无上下限 */
-  font-size: 2.5vmax;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  color: rgba(255, 255, 255, 0.92);
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
-  margin-bottom: 8px;
-}
-.ds-dice-caption-line2 {
-  font-size: clamp(12px, 1.6vw, 15px);
-  color: rgba(255, 255, 255, 0.72);
-  letter-spacing: 0.04em;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
-}
-/* 白天模式：黑色文字，去掉白底阴影 */
-.ds-dice-caption--day .ds-dice-caption-line1 {
-  color: rgba(0, 0, 0, 0.82);
-  text-shadow: none;
-}
-.ds-dice-caption--day .ds-dice-caption-line2 {
-  color: rgba(0, 0, 0, 0.6);
-  text-shadow: none;
-}
-/* 移动端与桌面端一致：固定在屏幕 80% 高度处（无需从底部避让，80% 仍在导航栏之上） */
-@media (max-width: 767px) {
-  .ds-dice-caption {
-    top: 80%;
-    bottom: auto;
-  }
-  /* 手机端第二行：字号已由上方 vmax 自适应，此处只额外压低不透明度 */
-  .ds-dice-caption-line2 {
-    opacity: 0.7;  /* 在整体 70% 基础上再叠加 70%，实际约 49% */
-  }
-}
-/* 中英轮换的内层渐隐渐显（独立于外层第一页显隐），1.8s 缓入缓出，观感温和 */
-.ds-dice-caption-text {
-  opacity: 1;
-  transition: opacity 1.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.ds-dice-caption-text.is-fading {
-  opacity: 0;
 }
 
 /* Three.js canvas：z-index:10 确保在所有页面内容上方 */
@@ -4074,60 +3077,6 @@ onUnmounted(()=>{
   background: transparent;
 }
 
-/* 呼吸灯提示文字：第一、二页底部显示，可点击向下滚动 */
-.ds-breathe {
-  position: fixed;
-  bottom: max(1.5vh, 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 30;
-  pointer-events: auto;          /* 可点击 / 手势命中 */
-  border: none;
-  background: none;
-  padding: 8px 14px;             /* 增大命中区域，便于手掌光标/手指点击 */
-  margin: 0;
-  font: inherit;
-  cursor: pointer;
-  font-size: clamp(12px, 1.4vw, 16px);
-  color: rgba(255, 255, 255, 0.6);
-  letter-spacing: 0.15em;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
-  animation: ds-breathe-pulse 4s ease-in-out infinite;
-  user-select: none;
-}
-.ds-breathe:hover { color: rgba(255, 255, 255, 0.9); }
-.ds-breathe--day {
-  color: rgba(0, 0, 0, 0.55);
-  text-shadow: none;
-}
-.ds-breathe--day:hover { color: rgba(0, 0, 0, 0.8); }
-/* 第三页手势缩放提示 */
-.ds-gesture-hint {
-  position: fixed;
-  bottom: max(3vh, 24px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 30;
-  padding: 8px 16px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: clamp(12px, 1.3vw, 15px);
-  letter-spacing: 0.08em;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-  user-select: none;
-}
-
-@keyframes ds-breathe-pulse {
-  0%, 100% { opacity: 0.3; }
-  50%      { opacity: 0.8; }
-}
-/* 移动端底部栏适配：避开 TabBar (56px) */
-@media (max-width: 767px) {
-  .ds-breathe { bottom: calc(56px + max(2vh, 10px)); }
-}
-
 /* 第二页右侧内容区（后续填充，z-index 高于 canvas） */
 .ds-info {
   position: absolute;
@@ -4137,222 +3086,6 @@ onUnmounted(()=>{
   z-index: 2;
   pointer-events: none;  /* 填充内容时改回 auto */
 }
-
-/* 占卜介绍卡片背景遮罩：点击非卡片区域关闭 */
-.mark-card-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 25;
-  background: transparent;
-  pointer-events: auto;
-}
-
-/* 占卜介绍卡片（点击地球占卜柱/名称气泡弹出） */
-.mark-card {
-  position: fixed;
-  top: 50%;
-  right: 14px;
-  transform: translateY(-50%);
-  width: clamp(280px, 32vw, 420px);   /* 自适应宽度 */
-  max-width: 88vw;
-  max-height: 90vh;
-  z-index: 215;
-  padding: 18px 16px 16px;
-  box-sizing: border-box;
-  border-radius: 16px;
-  background: rgba(28, 26, 32, 0.4);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(var(--primary-rgb), 0.45);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45), 0 0 12px rgba(var(--primary-rgb), 0.12);
-  color: #ECE6DC;
-  font-size: 13px;
-  line-height: 1.65;
-  display: flex;
-  flex-direction: column;
-  animation: markCardIn 0.22s ease;
-}
-/* 滚动容器：把滚动收敛到内容区，关闭按钮留在卡片右上角固定不动 */
-.mark-card-body {
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: calc(90vh - 34px);
-  scrollbar-width: thin;                                        /* Firefox 细滚动条 */
-  scrollbar-color: rgba(var(--primary-rgb), 0.5) transparent;
-}
-/* WebKit 细滚动条：透明轨道 + 上下留空，保住四角圆角 */
-.mark-card-body::-webkit-scrollbar { width: 2px; }
-.mark-card-body::-webkit-scrollbar-track {
-  background: transparent;
-  margin: 16px 0;
-}
-.mark-card-body::-webkit-scrollbar-thumb {
-  background: rgba(var(--primary-rgb), 0.5);
-  border-radius: 3px;
-}
-/* 横屏：卡片更宽，靠右显示，挡住部分地球也没关系 */
-@media (orientation: landscape) {
-  .mark-card {
-    width: clamp(360px, 42vw, 560px);
-  }
-}
-/* 竖屏手机：卡片居中显示（不再贴右） */
-@media (max-width: 768px) and (orientation: portrait) {
-  .mark-card {
-    right: auto;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: min(92vw, 440px);
-    animation: markCardInCenter 0.22s ease;
-  }
-}
-@keyframes markCardIn {
-  from { opacity: 0; transform: translateY(-50%) translateX(14px); }
-  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
-}
-@keyframes markCardInCenter {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.98); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-.mark-card.dn-mode-day {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(var(--primary-dark-rgb), 0.4);
-  color: #2a2a2a;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18), 0 0 10px rgba(var(--primary-rgb), 0.1);
-  scrollbar-color: rgba(var(--primary-dark-rgb), 0.5) transparent;
-}
-.mark-card.dn-mode-day::-webkit-scrollbar-thumb {
-  background: rgba(var(--primary-dark-rgb), 0.5);
-}
-.mark-card-close {
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  z-index: 2;
-  width: 26px;
-  height: 26px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: inherit;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-}
-.mark-card.dn-mode-day .mark-card-close { background: rgba(0, 0, 0, 0.08); }
-.mark-card-img {
-  width: 100%;
-  max-height: 190px;
-  object-fit: cover;
-  border-radius: 10px;
-  margin: 22px 0 12px;   /* 顶部留白，避开右上角关闭按钮，避免重叠 */
-  background: rgba(255, 255, 255, 0.06);
-}
-.mark-card-name {
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--primary);
-}
-.mark-card.dn-mode-day .mark-card-name { color: var(--primary-dark); }
-.mark-stars {
-  font-style: normal;
-  color: var(--primary);
-  letter-spacing: 1px;
-}
-.mark-card.dn-mode-day .mark-stars { color: var(--primary-dark); }
-.mark-card-alias {
-  font-size: 12px;
-  opacity: 0.6;
-  margin-top: 2px;
-}
-.mark-card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  font-size: 12px;
-  margin: 10px 0 6px;
-  opacity: 0.92;
-}
-.mark-card-meta span { white-space: nowrap; }
-.mark-card-sec {
-  margin-top: 10px;
-  font-size: 13px;
-}
-.mark-card-sec b {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 2px;
-  color: rgba(var(--primary-rgb), 0.85);
-}
-.mark-card.dn-mode-day .mark-card-sec b { color: rgba(var(--primary-dark-rgb), 0.9); }
-.mark-card-intro {
-  opacity: 0.95;
-  text-align: justify;
-}
-.mark-card-link {
-  display: inline-block;
-  margin-top: 14px;
-  color: var(--primary);
-  font-weight: 600;
-  text-decoration: none;
-}
-.mark-card.dn-mode-day .mark-card-link { color: var(--primary-dark); }
-
-/* 占卜柱悬停星级提示框：跟随光标，出现在光标上方 */
-.mark-tip {
-  position: fixed;
-  z-index: 220;
-  transform: translate(-50%, calc(-100% - 18px));
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: rgba(28, 26, 32, 0.9);
-  border: 1px solid rgba(var(--primary-rgb), 0.5);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5), 0 0 10px rgba(var(--primary-rgb), 0.15);
-  color: #ECE6DC;
-  font-size: 12px;
-  line-height: 1.5;
-  pointer-events: none;
-  white-space: nowrap;
-  animation: markTipIn 0.12s ease;
-}
-@keyframes markTipIn {
-  from { opacity: 0; transform: translate(-50%, calc(-100% - 8px)); }
-  to   { opacity: 1; transform: translate(-50%, calc(-100% - 18px)); }
-}
-.mark-tip.dn-mode-day {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(var(--primary-dark-rgb), 0.45);
-  color: #2a2a2a;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2), 0 0 8px rgba(var(--primary-rgb), 0.12);
-}
-.mark-tip-name {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 3px;
-}
-.mark-tip-img {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  object-fit: cover;
-  background: rgba(255, 255, 255, 0.15);
-  flex: 0 0 auto;
-}
-.mark-tip.dn-mode-day .mark-tip-name { color: var(--primary-dark); }
-.mark-tip-row { display: flex; align-items: center; gap: 4px; }
-.mark-tip-row .mark-stars {
-  font-style: normal;
-  color: var(--primary);
-  letter-spacing: 1px;
-}
-.mark-tip.dn-mode-day .mark-tip-row .mark-stars { color: var(--primary-dark); }
-
 
 /* 自定义滚动指示条 */
 .ds-scrollbar {
@@ -4376,11 +3109,6 @@ onUnmounted(()=>{
   transition: top 0.12s ease;
 }
 
-/* ── 三个悬浮按钮统一宽度（昼夜/主题/手势） ── */
-.ds-daynight-btn,
-.ds-theme-btn,
-.ds-gesture-btn { width: var(--ds-btn-w, 51px); }
-
 /* 昼夜切换按钮（右上角）：圆形徽章包符号 + 文字，徽章随昼夜左右滑动。颜色沿用原玻璃拟态。 */
 .ds-daynight-btn {
   position: fixed;
@@ -4391,7 +3119,8 @@ onUnmounted(()=>{
   align-items: center;
   justify-content: center;
   height: 25px;
-  padding: 0 4px;
+  width: 51px;
+  padding: 0 12px;
   box-sizing: border-box;
   border: 1px solid rgba(255,255,255,0.35);
   border-radius: 999px;
@@ -4439,22 +3168,16 @@ onUnmounted(()=>{
 
 /* 符号字体缩小（原 16 → 12） */
 .ds-dn-icon { font-size: 12px; line-height: 1; }
-/* 文字与滑动圆块在按钮内对称：两者垂直同中轴（line-height:1 + 居中），
-   圆块在左/右任一侧滑动，文字在另一侧半区水平居中，圆块与文字间距均匀。 */
+/* 文字占满按钮宽度：夜间靠右（徽章在左）、昼间靠左（徽章在右），避免被圆形徽章挡住 */
 .ds-dn-text {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  line-height: 1;
+  flex: 1;            /* 占满按钮宽度 */
+  text-align: right; /* 夜间：文字在右，徽章在左 */
   font-weight: 500;
+  padding-right: 2px;
+  opacity: 0.5;      /* 文字透明度 50% */
   white-space: nowrap;
-  padding-left: 15px;   /* 夜间：圆块在左，文字在右半区居中 */
 }
-.ds-daynight-btn.dn-mode-day .ds-dn-text {
-  padding-left: 0;
-  padding-right: 15px;  /* 昼间：圆块在右，文字在左半区居中 */
-}
+.ds-daynight-btn.dn-mode-day .ds-dn-text { text-align: left; padding-right: 0; padding-left: 2px; } /* 昼间：文字在左，徽章在右 */
 
 /* ── 主题 / 手势 按钮：与昼夜切换按钮完全一致的玻璃拟态样式（字体、边框、颜色、悬停动效相同） ── */
 .ds-theme-btn,
@@ -4465,6 +3188,7 @@ onUnmounted(()=>{
   align-items: center;
   justify-content: center;
   height: 25px;
+  width: 51px;
   padding: 0 12px;
   box-sizing: border-box;
   border: 1px solid rgba(255,255,255,0.35);
@@ -4494,8 +3218,7 @@ onUnmounted(()=>{
 .ds-theme-btn.dn-mode-day:hover,
 .ds-gesture-btn.dn-mode-day:hover { background: rgba(255,255,255,0.5); }
 
-/* 文字 50% 透明，昼/夜/主题/手势按钮统一 */
-.ds-dn-text,
+/* 文字 50% 透明，与昼夜按钮 .ds-dn-text { opacity:0.5 } 完全一致 */
 .ds-theme-label,
 .ds-gesture-text { opacity: 0.5; }
 
@@ -4509,22 +3232,18 @@ onUnmounted(()=>{
 @media (max-width: 480px) {
   .ds-daynight-btn,
   .ds-theme-btn,
-  .ds-gesture-btn { --ds-btn-w: 45px; height: 26px; padding: 0 10px; font-size: 11px; }
+  .ds-gesture-btn { height: 26px; width: 45px; padding: 0 10px; font-size: 11px; }
   .ds-dn-badge { width: 16.8px; height: 16.8px; }   /* 24 * 0.7 */
   .ds-dn-icon { font-size: 11px; }
-  .ds-dn-text { padding-left: 16.8px; }            /* 与圆块宽度一致，保持对称 */
   .ds-daynight-btn.dn-mode-day .ds-dn-badge { left: calc(100% - 20.8px); }   /* 4 + 16.8 */
-  .ds-daynight-btn.dn-mode-day .ds-dn-text { padding-left: 0; padding-right: 16.8px; }
 }
 @media (min-width: 1024px) {
   .ds-daynight-btn,
   .ds-theme-btn,
-  .ds-gesture-btn { --ds-btn-w: 58px; height: 27px; padding: 0 14px; font-size: 13px; }
+  .ds-gesture-btn { height: 27px; width: 58px; padding: 0 14px; font-size: 13px; }
   .ds-dn-badge { width: 21px; height: 21px; }   /* 30 * 0.7 */
   .ds-dn-icon { font-size: 13px; }
-  .ds-dn-text { padding-left: 21px; }          /* 与圆块宽度一致，保持对称 */
   .ds-daynight-btn.dn-mode-day .ds-dn-badge { left: calc(100% - 25px); }   /* 4 + 21 */
-  .ds-daynight-btn.dn-mode-day .ds-dn-text { padding-left: 0; padding-right: 21px; }
 }
 
 /* 第三页返回第二页按钮：顶部居中，玻璃拟态，与昼夜/手势按钮同款风格 */
@@ -4613,35 +3332,6 @@ onUnmounted(()=>{
 }
 .ds-theme-opt-name { line-height: 1; }
 
-/* 黑夜模式：主题色弹层选项适配暗色背景 */
-.app-shell.dark .ds-theme-opt {
-  background: #2B2D40 !important;
-  border-color: #4D5173 !important;
-  color: #D6D6DF !important;
-}
-.app-shell.dark .ds-theme-opt.active {
-  border-color: var(--primary) !important;
-  background: rgba(var(--primary-rgb), 0.18) !important;
-  color: #FFFFFF !important;
-}
-.app-shell.dark .ds-theme-opt-dot {
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.2) !important;
-}
-/* teleport 到 body 的弹窗（脱离 .app-shell）使用 :root.dark 命中黑夜样式 */
-:root.dark .ds-theme-opt {
-  background: #2B2D40 !important;
-  border-color: #4D5173 !important;
-  color: #D6D6DF !important;
-}
-:root.dark .ds-theme-opt.active {
-  border-color: var(--primary) !important;
-  background: rgba(var(--primary-rgb), 0.18) !important;
-  color: #FFFFFF !important;
-}
-:root.dark .ds-theme-opt-dot {
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.2) !important;
-}
-
 .txt-enter-active { transition: opacity 2.5s ease; }
 .txt-leave-active { transition: opacity  .5s ease; }
 .txt-enter-from, .txt-leave-to { opacity: 0; }
@@ -4684,24 +3374,4 @@ onUnmounted(()=>{
   100% { transform: translate(0, 0) rotate(0deg); }
 }
 
-</style>
-
-<style>
-/* 手势悬停高亮（非 scoped）—— 上方栏按钮 */
-.ds-gesture-btn.gesture-hovered,
-.ds-daynight-btn.gesture-hovered,
-.ds-theme-btn.gesture-hovered {
-  background: rgba(20,20,30,0.45) !important;
-}
-.ds-gesture-btn.dn-mode-day.gesture-hovered,
-.ds-daynight-btn.dn-mode-day.gesture-hovered,
-.ds-theme-btn.dn-mode-day.gesture-hovered {
-  background: rgba(255,255,255,0.95) !important;
-}
-.ds-back-page2.gesture-hovered {
-  background: rgba(20,20,30,0.6) !important;
-}
-.ds-back-page2.dn-mode-day.gesture-hovered {
-  background: rgba(255,255,255,0.95) !important;
-}
 </style>

@@ -1,5 +1,6 @@
 export const NAV_LIST = [
-  { path: '/',          text: '首页',     icon: '/images/tab_home.png',       activeIconFile: 'tab_home_active.png' },
+  { path: '/index',     text: '首页',     icon: '/images/tab_home.png',       activeIconFile: 'tab_home_active.png' },
+
   { path: '/box',       text: '每日运势', icon: '/images/tab_box.png',        activeIconFile: 'tab_box_active.png' },
   { path: '/dice',      text: '骰子',     icon: '/images/tab_dice.png',       activeIconFile: 'tab_dice_active.png' },
   { path: '/coin',      text: '硬币',     icon: '/images/tab_coin.png',       activeIconFile: 'tab_coin_active.png' },
@@ -12,4 +13,5 @@ export const NAV_LIST = [
   { path: '/book',      text: '答案之书', icon: '/images/tab_book.png',       activeIconFile: 'tab_book_active.png' },
   { path: '/lenormand', text: '雷诺曼牌', icon: '/images/tab_lenormand.png',  activeIconFile: 'tab_lenormand_active.png' },
   { path: '/history',   text: '占卜历史', icon: '/images/tab_history.png',    activeIconFile: 'tab_history_active.png' },
+  { path: '/about',     text: '关于网站', icon: '',    activeIconFile: '' },
 ]

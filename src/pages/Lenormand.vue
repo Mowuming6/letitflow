@@ -4,6 +4,7 @@
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
+      <Teleport to="body">
       <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
         <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
           <div class="help-popup">
@@ -21,8 +22,13 @@
 如何使用：
 1.选择安静的环境，保持心神专一，默念想要询问的问题。问题要具体明确，时间范围建议在3个月至1年以内，避免长期预测。
 2.选择单牌或三牌阵，根据直觉抽出牌。
-3.【手势】：【握拳✊】，开始洗牌；【左右挥手掌✋】即可洗牌；选牌界面，【左右挥手掌✋】可左右滑动牌区，伸出【食指☝️】可在当前牌区选牌，食指在某牌上停留超过3秒即可选中该牌。【握拳✊】触发重新占卜。
-4.根据牌或牌组解读，获得答案。
+3.根据牌或牌组解读，获得答案。
+
+【手势】：
+【握拳✊】，开始洗牌；【左右挥手掌✋】即可洗牌；选牌界面，【左右挥手掌✋】可左右滑动牌区，伸出【食指☝️】可在当前牌区选牌，食指在某牌上停留超过3秒即可选中该牌。【握拳✊】触发重新占卜。
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
 
 注意事项：不问健康生死、黄赌毒、他人隐私、具体数字时间类问题；同一个问题建议隔7天再问，反复追问会让信息混乱；尽量避开深夜11点到凌晨3点能量活跃期间；别把结果当"圣旨"，占卜是给你启示而非替你做决定。
 
@@ -30,6 +36,7 @@
         </div>
       </div>
       </Transition>
+      </Teleport>
       <div class="page-title">雷诺曼占卜</div>
       <div class="page-subtitle">浅象明事理，灵卜解难疑</div>
 
@@ -39,9 +46,9 @@
       <!-- Phase: choose -->
       <template v-if="phase === 'choose'">
         <div class="draw-count-row">
-          <div class="draw-btn" :class="{'draw-on': drawCount===1}" @click="drawCount=1">抽1张</div>
-          <div class="draw-btn" :class="{'draw-on': drawCount===2}" @click="drawCount=2">抽2张</div>
-          <div class="draw-btn" :class="{'draw-on': drawCount===3}" @click="drawCount=3">抽3张</div>
+          <div class="draw-btn" role="button" tabindex="0" :class="{'draw-on': drawCount===1}" @click="drawCount=1">抽1张</div>
+          <div class="draw-btn" role="button" tabindex="0" :class="{'draw-on': drawCount===2}" @click="drawCount=2">抽2张</div>
+          <div class="draw-btn" role="button" tabindex="0" :class="{'draw-on': drawCount===3}" @click="drawCount=3">抽3张</div>
         </div>
         <div class="deck-display" @click="startShuffle">
           <div v-for="(d,i) in deckDisplay" :key="i" class="deck-card"
@@ -136,8 +143,9 @@ import { helpCurtainBeforeEnter, helpCurtainEnter, helpCurtainLeave } from '../c
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import AiDialogue from '../components/AiDialogue.vue'
 import { store } from '../store.js'
-import { play } from '../sound.js'
+import { play, vib } from '../sound.js'
 import { THEMES } from '../theme.js'
+import RAW_CARDS from './lenormand_data.js'
 
 const themeStyle = computed(() => store.getThemeStyle())
 const fanCanvasRef = ref(null)
@@ -157,14 +165,13 @@ const interpretation = ref('')
 const deckDisplay = ref(Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2})))
 
 function natureProps(nature){switch(nature){case'正面':return{color:'#10b981',nc:'pos'};case'负面':return{color:'#ef4444',nc:'neg'};case'中性偏好':return{color:'#D4A853',nc:'spos'};case'中性偏坏':return{color:'#f97316',nc:'sneg'};default:return{color:'#6B7280',nc:'neu'}}}
-const RAW_CARDS=[{id:1,name:'骑士',nature:'中性偏好',meaning:'消息、信差、访客',extended:'新进展、递送、恋情中的新人（男）'},{id:2,name:'幸运草',nature:'正面',meaning:'幸运、机会、开心',extended:'小幸运、小偏财、赌博投机者'},{id:3,name:'船',nature:'中性',meaning:'移动、商业、旅行',extended:'远距离、遗产、转帐、向往、商人'},{id:4,name:'房子',nature:'中性偏好',meaning:'家、私生活、安全',extended:'建筑/场所、稳固、家人'},{id:5,name:'树',nature:'中性',meaning:'健康、根源、成长',extended:'缓慢、耐心、沉闷、远亲/祖先'},{id:6,name:'云',nature:'负面',meaning:'麻烦、迷惘、不幸',extended:'压力、隐藏、猜忌、阴郁'},{id:7,name:'蛇',nature:'中性偏坏',meaning:'欺骗、背叛、复杂',extended:'虚伪、恶意、变故、情敌（女）'},{id:8,name:'棺材',nature:'负面',meaning:'结束、盖棺论定',extended:'疾病、死亡、破产、解脱'},{id:9,name:'花束',nature:'正面',meaning:'幸福、礼物、喜悦',extended:'美好、美丽、成功'},{id:10,name:'镰刀',nature:'负面',meaning:'快速斩断、伤害',extended:'危险、中断、骤停、减少'},{id:11,name:'鞭子',nature:'中性偏坏',meaning:'争执、重复、性',extended:'口角、冲突、责罚、暴力'},{id:12,name:'鸟',nature:'中性',meaning:'聊天、双倍',extended:'沟通、八卦、小麻烦'},{id:13,name:'小孩',nature:'中性',meaning:'孩子、新的',extended:'小的、刚起步、单纯'},{id:14,name:'狐狸',nature:'中性偏坏',meaning:'欺骗、背叛',extended:'利用、聪明、策略性的'},{id:15,name:'熊',nature:'中性偏好',meaning:'力量、资源、母亲',extended:'理财、饮食、女性长辈'},{id:16,name:'星星',nature:'正面',meaning:'展望、指引、实现',extended:'理想、希望、方向正确'},{id:17,name:'鹳鸟',nature:'中性偏好',meaning:'改变、进步、怀孕',extended:'迁移、航行'},{id:18,name:'狗',nature:'正面',meaning:'朋友、忠诚',extended:'帮助、支持、奉献'},{id:19,name:'塔',nature:'中性',meaning:'长寿、权威、孤立',extended:'退休生活、严肃、雄心壮志'},{id:20,name:'花园',nature:'中性偏好',meaning:'公众、社交',extended:'公开、公共场合、社交平台'},{id:21,name:'山',nature:'负面',meaning:'障碍、延迟',extended:'停滞、疏远、远方'},{id:22,name:'路口',nature:'中性',meaning:'选择、多重',extended:'途径、分支、分工'},{id:23,name:'老鼠',nature:'负面',meaning:'损失、压力',extended:'侵蚀、损耗、烦恼'},{id:24,name:'爱心',nature:'正面',meaning:'爱',extended:'情感、爱情、好意、慈悲'},{id:25,name:'戒指',nature:'中性偏好',meaning:'约定、循环',extended:'结合、承诺、合约'},{id:26,name:'书',nature:'中性偏坏',meaning:'未知、知识',extended:'秘密、学业、神秘学'},{id:27,name:'信',nature:'中性',meaning:'书面讯息',extended:'文件、纸制品'},{id:28,name:'男人',nature:'中性',meaning:'男人、阳性',extended:'男性气质的'},{id:29,name:'女人',nature:'中性',meaning:'女人、阴性',extended:'女性气质的'},{id:30,name:'百合',nature:'中性偏好',meaning:'贞洁、年长',extended:'智慧、成熟、性欲'},{id:31,name:'太阳',nature:'正面',meaning:'成功、胜利',extended:'正面、积极、光明正大'},{id:32,name:'月亮',nature:'正面',meaning:'名誉、直觉、阴性',extended:'公众形象、浪漫、神秘感'},{id:33,name:'钥匙',nature:'正面',meaning:'解答、关键、确定',extended:'重大、微妙'},{id:34,name:'鱼',nature:'正面',meaning:'丰盛、财富',extended:'深度、独立自主、自由'},{id:35,name:'锚',nature:'正面',meaning:'稳定、持久',extended:'希望、信念、定下来'},{id:36,name:'十字架',nature:'负面',meaning:'痛苦折磨、宗教',extended:'负担、压力、不幸'}]
 const LENORMAND_CARDS=RAW_CARDS.map(c=>({...c,...natureProps(c.nature)}))
 
 let shuffledDeck=[],shuffleTouchX=0,shuffleDir=0,shuffleGestureCounted=false
 let shuffleCompleteTimer = null
 let fanCtx=null,fanW=1,fanH=1,fanRect=null,fanOffset=0,fanVelocity=0,fanStartX=0,fanPrevX=0,fanTimerId=null
 let pickedIndices=[],liftProgress={},cardBackImg=null,dpr=2,fanRafPending=false,fanVibStep=0
-function getCardSize(){const w=window.innerWidth;if(w>=1200)return{w:130,h:195};if(w>=768)return{w:105,h:157};return{w:70,h:105}}
+function getCardSize(fh){const ch=(fh||400)*0.7;return{w:ch/1.5,h:ch}}
 let themeColor='#D4A853',themeGlow='rgba(212,168,83,0.75)',themeBorder='rgba(212,168,83,0.5)'
 function initTheme(){const t=THEMES[store.themeKey||'jin'],r=parseInt(t.primary.slice(1,3),16),g=parseInt(t.primary.slice(3,5),16),b=parseInt(t.primary.slice(5,7),16);themeColor=t.primary;themeGlow=`rgba(${r},${g},${b},0.75)`;themeBorder=`rgba(${r},${g},${b},0.5)`}
 onMounted(()=>initTheme())
@@ -216,6 +223,10 @@ function scrollFanIntoView() {
 function showSpread(){if(!shuffledDeck.length)shuffledDeck=[...LENORMAND_CARDS].sort(()=>Math.random()-0.5);pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;fanVelocity=0;fanCtx=null;pickedCount.value=0;phase.value='spread';setTimeout(()=>{initFanCanvas();scrollFanIntoView()},120)}
 function initFanCanvas(){
   initTheme();const cv=fanCanvasRef.value;if(!cv)return
+  const vh=window.innerHeight||800
+  const ratio=(window.innerWidth||800)<1024?0.72*0.8*0.8:0.72
+  let newH=vh*ratio;newH=Math.max(300,Math.min(newH,560))
+  cv.style.height=newH+'px'
   const rect=cv.getBoundingClientRect();dpr=window.devicePixelRatio||2;cv.width=rect.width*dpr;cv.height=rect.height*dpr
   fanCtx=cv.getContext('2d');fanCtx.scale(dpr,dpr);fanW=rect.width;fanH=rect.height;fanRect=rect
   const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{cardBackImg=img;drawFan()};img.onerror=()=>drawFan();img.src=cardBackSrc.value;drawFan()
@@ -245,7 +256,7 @@ function updateHoveredCard(clientX, clientY) {
   if (phase.value !== 'spread') { hoveredCardIdx.value = -1; return -1 }
   const rect = fanCanvasRef.value ? fanCanvasRef.value.getBoundingClientRect() : null; if (!rect) return -1
   const lx = clientX - rect.left, ly = clientY - rect.top
-  const total = LENORMAND_CARDS.length, cx = fanW / 2, cy = fanH + 400, R = 500, span = 2.0, { w: cw, h: ch } = getCardSize()
+  const total = LENORMAND_CARDS.length, { w: cw, h: ch } = getCardSize(fanH), cx = fanW / 2, cy = fanH + 500 - ch/2, R = 500, span = 2.0
   let bestIdx = -1
   for (let i = 0; i < total; i++) {
     const angle = -span / 2 + i * (span / (total - 1)) - fanOffset
@@ -369,12 +380,9 @@ function handleGestureTrigger(e) {
 }
 
 function handleGestureClick(e) {
-  if (e.detail.state === 'fist') {
-    if (phase.value === 'choose') {
-      startShuffle()
-    } else if (phase.value === 'result') {
-      reset()
-    }
+  // 仅保留「选牌阶段洗牌」手势；结果页重占改为点击「再次占卜」按钮
+  if (e.detail.state === 'fist' && phase.value === 'choose') {
+    startShuffle()
   }
 }
 
@@ -391,11 +399,13 @@ function handleCanvasMouseLeave() {
   drawFan();
 }
 
+function onPointReset() { if (phase.value === 'result') reset() }
 onMounted(() => {
   document.addEventListener('gesture-hover', handleGestureHover)
   document.addEventListener('gesture-state', handleGestureState)
   document.addEventListener('gesture-trigger', handleGestureTrigger)
   document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
 })
 
 onUnmounted(() => {
@@ -403,13 +413,14 @@ onUnmounted(() => {
   document.removeEventListener('gesture-state', handleGestureState)
   document.removeEventListener('gesture-trigger', handleGestureTrigger)
   document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
   if (fanTimerId) { clearTimeout(fanTimerId); fanTimerId = null }
 })
 
 function drawFan(){
   const ctx=fanCtx;if(!ctx)return
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,fanW,fanH)
-  const total=LENORMAND_CARDS.length,cx=fanW/2,cy=fanH+400,R=500,span=2.0,{w:cw,h:ch}=getCardSize(),cr=5
+  const total=LENORMAND_CARDS.length,{w:cw,h:ch}=getCardSize(fanH),cx=fanW/2,cy=fanH+500-ch/2,R=500,span=2.0,cr=5
   const drawRound=()=>{ctx.beginPath();ctx.moveTo(-cw/2+cr,-ch/2);ctx.lineTo(cw/2-cr,-ch/2);ctx.arcTo(cw/2,-ch/2,cw/2,-ch/2+cr,cr);ctx.lineTo(cw/2,ch/2-cr);ctx.arcTo(cw/2,ch/2,cw/2-cr,ch/2,cr);ctx.lineTo(-cw/2+cr,ch/2);ctx.arcTo(-cw/2,ch/2,-cw/2,ch/2-cr,cr);ctx.lineTo(-cw/2,-ch/2+cr);ctx.arcTo(-cw/2,-ch/2,-cw/2+cr,-ch/2,cr);ctx.closePath()}
   const items=[];for(let i=0;i<total;i++){const angle=-span/2+i*(span/(total-1))-fanOffset,y=cy-Math.cos(angle)*R;if(y+ch/2<0||y-ch/2>fanH+ch)continue;if(Math.abs(angle)>span/2+0.2)continue;items.push({i,angle})}
   items.sort((a,b)=>a.i-b.i)
@@ -450,7 +461,7 @@ function onFanTouchMove(e){
   const x=e.touches[0].clientX,dx=x-fanPrevX;fanVelocity=dx;fanPrevX=x
   fanOffset-=dx*0.0038;fanOffset=Math.max(-1.25,Math.min(1.25,fanOffset))
   if(!fanRafPending&&fanCanvasRef.value){fanRafPending=true;requestAnimationFrame(()=>{fanRafPending=false;drawFan()})}
-  const vStep=Math.round(fanOffset*25);if(vStep!==fanVibStep){fanVibStep=vStep;try{navigator.vibrate&&navigator.vibrate(12)}catch(e){};play('cardTick')}
+  const vStep=Math.round(fanOffset*25);if(vStep!==fanVibStep){fanVibStep=vStep;vib('light');play('cardTick')}
   if (store.isGesture) {
     updateHoveredCard(x, e.touches[0].clientY)
   }
@@ -465,9 +476,9 @@ function onFanTouchEnd(e){
   }
 }
 function doFanMomentum(){let vel=fanVelocity;function step(){vel*=0.92;fanOffset-=vel*0.0038;fanOffset=Math.max(-1.25,Math.min(1.25,fanOffset));drawFan();if(Math.abs(vel)>0.25)fanTimerId=setTimeout(step,16)};step()}
-function trySelectFanCard(clientX,clientY){const rect=fanCanvasRef.value?fanCanvasRef.value.getBoundingClientRect():fanRect;if(!rect)return;const lx=clientX-rect.left,ly=clientY-rect.top,total=LENORMAND_CARDS.length,cx=fanW/2,cy=fanH+400,R=500,span=2.0,{w:cw,h:ch}=getCardSize();let bestIdx=-1;for(let i=0;i<total;i++){const angle=-span/2+i*(span/(total-1))-fanOffset;if(Math.abs(angle)>span/2+0.1)continue;const x=cx+Math.sin(angle)*R,y=cy-Math.cos(angle)*R,dx=lx-x,dy=ly-y,cosA=Math.cos(angle),sinA=Math.sin(angle),lc_x=dx*cosA+dy*sinA,lc_y=-dx*sinA+dy*cosA;if(Math.abs(lc_x)<=cw/2+4&&Math.abs(lc_y)<=ch/2+4)bestIdx=i};if(bestIdx>=0)pickFanCard(bestIdx)}
-function pickFanCard(idx){if(pickedIndices.includes(idx))return;if(pickedIndices.length>=drawCount.value)return;play('cardDraw');try{navigator.vibrate&&navigator.vibrate(45)}catch(e){};pickedIndices=[...pickedIndices,idx];pickedList.value=[...pickedIndices];liftProgress[idx]=0;animateLift(idx);pickedCount.value=pickedIndices.length;if(pickedCount.value>=drawCount.value)setTimeout(()=>revealCards(),650)}
-function animateLift(idx){const TARGET=getCardSize().h*0.3,FRAMES=8;let frame=0;function step(){frame++;const t=frame/FRAMES;liftProgress[idx]=TARGET*(1-(1-t)*(1-t));drawFan();if(frame<FRAMES)setTimeout(step,16)};step()}
+function trySelectFanCard(clientX,clientY){const rect=fanCanvasRef.value?fanCanvasRef.value.getBoundingClientRect():fanRect;if(!rect)return;const lx=clientX-rect.left,ly=clientY-rect.top,total=LENORMAND_CARDS.length,{w:cw,h:ch}=getCardSize(fanH),cx=fanW/2,cy=fanH+500-ch/2,R=500,span=2.0;let bestIdx=-1;for(let i=0;i<total;i++){const angle=-span/2+i*(span/(total-1))-fanOffset;if(Math.abs(angle)>span/2+0.1)continue;const x=cx+Math.sin(angle)*R,y=cy-Math.cos(angle)*R,dx=lx-x,dy=ly-y,cosA=Math.cos(angle),sinA=Math.sin(angle),lc_x=dx*cosA+dy*sinA,lc_y=-dx*sinA+dy*cosA;if(Math.abs(lc_x)<=cw/2+4&&Math.abs(lc_y)<=ch/2+4)bestIdx=i};if(bestIdx>=0)pickFanCard(bestIdx)}
+function pickFanCard(idx){if(pickedIndices.includes(idx))return;if(pickedIndices.length>=drawCount.value)return;play('cardDraw');vib('medium');pickedIndices=[...pickedIndices,idx];pickedList.value=[...pickedIndices];liftProgress[idx]=0;animateLift(idx);pickedCount.value=pickedIndices.length;if(pickedCount.value>=drawCount.value)setTimeout(()=>revealCards(),650)}
+function animateLift(idx){const TARGET=getCardSize(fanH).h*0.3,FRAMES=8;let frame=0;function step(){frame++;const t=frame/FRAMES;liftProgress[idx]=TARGET*(1-(1-t)*(1-t));drawFan();if(frame<FRAMES)setTimeout(step,16)};step()}
 function revealCards(){
   const res=pickedIndices.map(cardIdx=>{const card=shuffledDeck[cardIdx]||LENORMAND_CARDS[cardIdx];return{id:card.id,name:card.name,nature:card.nature,color:card.color,nc:card.nc,meaning:card.meaning,extended:card.extended,img:`./lenormandcard/${card.id}.jpg`}})
   pendingResults.value=res;flipState.value=res.map(()=>false);phase.value='flipping'
@@ -496,9 +507,7 @@ function onShuffleMouseUp(){if(!shuffleMouseDown)return;shuffleMouseDown=false;o
 
 function getLenormandResultData() {
   return results.value.map(r => ({
-    name: r.name,
-    meaning: r.meaning,
-    extended: r.extended
+    id: r.id
   }))
 }
 </script>
@@ -528,7 +537,7 @@ function getLenormandResultData() {
 .flip-card-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .spread-hint { text-align: center; font-size: 13px; color: #999; margin: 4px 0 8px; }
 .fan-wrap { width: 100%; overflow: hidden; background: var(--primary-light); border-radius: 10px; margin-bottom: 8px; }
-.fan-canvas { width: 100%; height: 260px; display: block; touch-action: pan-y; background: transparent; }
+.fan-canvas { width: 100%; height: 430px; display: block; touch-action: pan-y; background: transparent; }
 .result-cards { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
 .leno-result-card { flex: 1; min-width: 80px; max-width: 130px; text-align: center; }
 .leno-card-img-wrap { width: 70px; height: 105px; border-radius: 5px; overflow: hidden; border: 1.5px solid var(--primary-shadow, rgba(212,168,83,0.25)); box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin: 0 auto 5px; padding: 3px; background: #fff; box-sizing: border-box; }
@@ -550,7 +559,7 @@ function getLenormandResultData() {
   .picked-card-empty { width: 105px; height: 157px; font-size: 22px; }
   .flip-card { width: 105px; height: 157px; }
   .leno-card-img-wrap { width: 105px; height: 157px; }
-  .fan-canvas { height: 380px; }
+  .fan-canvas { height: 570px; }
 }
 @media (min-width: 1200px) {
   .deck-display { height: 380px; }

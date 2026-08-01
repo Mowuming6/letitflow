@@ -4,6 +4,7 @@
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
+      <Teleport to="body">
       <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
         <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
           <div class="help-popup">
@@ -14,13 +15,19 @@
 抛硬币是一种通过投掷硬币正反面结果辅助决策的行为，常被视为公平的随机选择方式，广泛用于日常决策与概率研究。但实验显示初始面朝上的结果概率约为51%，与抛掷方式和旋转轴等因素相关。（咱们的电子硬币是50%）
 
 如何使用：
-拖动硬币可旋转查看，点击按钮抛掷。
-【手势】：开启手势后，在镜头前【上下挥动手掌】，即可抛动硬币。【握拳】可重新开始。
+可点击按钮或投掷硬币。
+
+【手势】：
+【上下挥动手掌】，即可抛动硬币；
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
 
 答案仅供参考，最终决定永远由你自己做出。</span>
         </div>
       </div>
       </Transition>
+      </Teleport>
       <div class="page-title">命运硬币</div>
       <div class="page-subtitle">硬币翻空转，正反皆天意</div>
       <input class="input-field" placeholder="输入所问之事（可选）" v-model="question" />
@@ -128,15 +135,10 @@ function handleGesture(e) {
   }
 }
 
-function handleGestureClick(e) {
-  if (showResult.value && e.detail.state === 'fist' && phase.value === 'done') {
-    reset()
-  }
-}
-
+function onPointReset() { if (showResult.value) reset() }
 onMounted(()=>{
   document.addEventListener('gesture-trigger', handleGesture)
-  document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
   const cv=canvasRef.value;const rect=cv.getBoundingClientRect();const dpr=window.devicePixelRatio||2
   cv.width=rect.width*dpr;cv.height=rect.height*dpr;W=cv.width;H=cv.height
   gl=cv.getContext('webgl',{antialias:true,alpha: true,depth:true});if(!gl)return
@@ -153,7 +155,7 @@ onMounted(()=>{
 })
 onUnmounted(()=>{
   document.removeEventListener('gesture-trigger', handleGesture)
-  document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
   if(raf)cancelAnimationFrame(raf)
 })
 

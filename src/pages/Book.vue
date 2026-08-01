@@ -4,21 +4,29 @@
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
+      <Teleport to="body">
       <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
         <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
           <div class="help-popup">
             <div class="help-popup-close" @click="showHelpPopup = false">×</div>
             <div class="help-popup-title">使用说明</div>
-            <span class="help-popup-content">如何使用：
+            <span class="help-popup-content">《答案之书》是一本带有心理游戏性质的趣味书籍，适合在迷茫时寻找内心指引。它并非传统意义上的知识书籍，而更像是一种​​互动式的心灵玩具​​。书中没有系统的论述或章节，每一页只有一句简短的话（通常不超过10个字），用来回应读者心中提出的问题。
+
 1. 心中默念你想问的问题
 2. 点击书本图案、左右翻页或「寻求答案」按钮
-3. 【手势】：开启手势后，在镜头前【左右挥动手掌】，即可翻阅并自动获取答案之书的解答。【握拳】可重新翻阅。
-4. 以开放的心态接受书中的指引
+3. 以开放的心态接受书中的指引
 
-答案之书收录数百条神谕，以随机翻页的方式给予你来自宇宙的提示。左页为英文，右页为中文。答案仅供参考，最终决定永远由你自己做出。</span>
+【手势】：
+在镜头前【左右挥动手掌】，即可翻阅并自动获取答案之书的解答；
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
+
+左页为英文，右页为中文。答案仅供参考，最终决定永远由你自己做出。</span>
         </div>
       </div>
       </Transition>
+      </Teleport>
       <div class="page-title">答案之书</div>
       <div class="page-subtitle">闭目思纷乱，书翻顿开明</div>
 
@@ -154,20 +162,15 @@ function handleGesture(e) {
   }
 }
 
-function handleGestureClick(e) {
-  if (phase.value === 'open' && e.detail.state === 'fist') {
-    reset()
-  }
-}
-
+function onPointReset() { if (phase.value === 'open') reset() }
 onMounted(() => {
   document.addEventListener('gesture-trigger', handleGesture)
-  document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
 })
 
 onUnmounted(() => {
   document.removeEventListener('gesture-trigger', handleGesture)
-  document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
 })
 
 function _doAsk() {

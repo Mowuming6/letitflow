@@ -19,8 +19,11 @@ export const THEMES = {
     primaryDark:   '#a68a36',
     primaryLight:  '#f8f6f3',
     primaryShadow: 'rgba(218,171,90,0.30)',
+    eyeIris:       '#f4af25',   // 瞳孔虹膜主色：与骰子同色相(琥珀金~40°)但更高饱和度，鲜活不发灰
+    eyeEdge:       '#C99A2E',   // 杏仁眼眼眶描边：亮金偏暗，呼应金色
+    eyeBright:     true,        // 专属亮调：亮色外推+轻压暗（火/其余不开启，保持原暗调）
     bgColor1:      '#f3ebdc',
-    bgColor2:      '#faf9f8',
+    bgColor2:      '#faf9f8',//#faf9f8
     iconDir:       '/images/themes/jin/',
   },
   mu: {
@@ -29,6 +32,8 @@ export const THEMES = {
     primaryDark:   '#193d18',
     primaryLight:  '#eff5ed',
     primaryShadow: 'rgba(101, 135, 91, 0.3)',
+    eyeIris:       '#5d875b',
+    eyeEdge:       '#193d18',
     bgColor1:      '#e6f8e7',
     bgColor2:      '#f9fcf9',
     iconDir:       '/images/themes/mu/',
@@ -39,6 +44,8 @@ export const THEMES = {
     primaryDark:   '#1D3144',
     primaryLight:  '#EDF2F6',
     primaryShadow: 'rgba(113,135,155,0.30)',
+    eyeIris:       '#71879B',
+    eyeEdge:       '#1D3144',
     bgColor1:      '#e5f0f9',
     bgColor2:      '#F8F8FA',
     iconDir:       '/images/themes/shui/',
@@ -49,6 +56,8 @@ export const THEMES = {
     primaryDark:   '#841B11',
     primaryLight:  '#f6f0ed',
     primaryShadow: 'rgba(211,101,51,0.30)',
+    eyeIris:       '#D10F0F',   // 瞳孔改回原来的纯红（比主题 primary 更红）
+    eyeEdge:       '#841B11',   // 眼眶描边=主题深色（暗红）
     bgColor1:      '#FEF2EC',
     bgColor2:      '#faf8f8',
     iconDir:       '/images/themes/huo/',
@@ -59,6 +68,8 @@ export const THEMES = {
     primaryDark:   '#59351F',
     primaryLight:  '#F6F0EA',
     primaryShadow: 'rgba(162,135,107,0.30)',
+    eyeIris:       '#A2876B',
+    eyeEdge:       '#59351F',
     bgColor1:      '#faf0e7',
     bgColor2:      '#faf9f8',
     iconDir:       '/images/themes/tu/',
@@ -69,6 +80,8 @@ export const THEMES = {
     primaryDark:   '#24524a',
     primaryLight:  '#eef7f6',
     primaryShadow: 'rgba(119,179,150,0.30)',
+    eyeIris:       '#7ab0a2',
+    eyeEdge:       '#24524a',
     bgColor1:      '#e6f7f4',
     bgColor2:      '#f8fafa',
     iconDir:       '/images/themes/feng/',

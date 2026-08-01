@@ -4,6 +4,7 @@
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
+      <Teleport to="body">
       <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
         <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
           <div class="help-popup">
@@ -14,12 +15,18 @@
 如何使用：
 1.时间起卦法：用农历的年、月、日数相加除以8，余数定为上卦；再加时辰数除以8，余数定为下卦；总和除以6，余数定为动爻。
 2.数字起卦法：根据直觉报三个数，代表"天"、"地"、"人"，前两个数分别除以8取余数定上卦和下卦，第三个数除以6取余数定动爻。
-3.【手势】：开启手势后，在镜头前【握拳】，即可开始卜卦。【握拳】可重新开始。
+
+【手势】：
+在八卦阵上【握拳】，即可开始卜卦。
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
 
 答案仅供参考，最终决定永远由你自己做出。</span>
         </div>
       </div>
       </Transition>
+      </Teleport>
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <div class="page-title">梅花易数</div>
       <div class="page-subtitle">起卦观物象，演数知吉凶</div>
@@ -27,8 +34,8 @@
       <input class="input-field" placeholder="输入所问之事（可选）" v-model="question" />
 
       <div class="mode-tabs">
-        <div class="mode-tab" :class="{ 'mode-on': mode === 'time' }" @click="setMode('time')">当前时间起卦</div>
-        <div class="mode-tab" :class="{ 'mode-on': mode === 'number' }" @click="setMode('number')">数字起卦</div>
+        <div class="mode-tab" role="button" tabindex="0" :class="{ 'mode-on': mode === 'time' }" @click="setMode('time')">当前时间起卦</div>
+        <div class="mode-tab" role="button" tabindex="0" :class="{ 'mode-on': mode === 'number' }" @click="setMode('number')">数字起卦</div>
       </div>
 
       <div v-if="mode === 'number'" class="num-row">
@@ -122,6 +129,8 @@ const rolling = ref(false)
 const glowing = ref(false)
 const hexLines = ref([])
 const hasChanging = ref(false)
+const mainGuaId = ref(null)
+const changedGuaId = ref(null)
 const guaDisplayTitle = ref(''), guaPoem = ref(''), guaJiyi = ref('')
 const activeTab = ref(0)
 const tabContents = ref([])
@@ -219,6 +228,7 @@ function generate() {
     guaDisplayTitle.value = entry ? (entry['卦全称'] + ' · ' + entry['卦吉凶等级']) : hexName
     guaPoem.value = entry ? (entry['象曰歌谣'] || '') : ''
     guaJiyi.value = entry ? (entry['卦释义'] || '') : ''
+    mainGuaId.value = entry ? entry['卦序号'] : null
 
     const newUL = [...ut.lines]; const newLL = [...lt.lines]
     if (changingLine <= 3) newLL[changingLine-1] ^= 1
@@ -231,6 +241,7 @@ function generate() {
     changedGuaDisplayTitle.value = cEntry ? (cEntry['卦全称'] + ' · ' + cEntry['卦吉凶等级']) : cName
     changedGuaPoem.value = cEntry ? (cEntry['象曰歌谣'] || '') : ''
     changedGuaJiyi.value = cEntry ? (cEntry['卦释义'] || '') : ''
+    changedGuaId.value = cEntry ? cEntry['卦序号'] : null
 
     play('cardReveal')
     rolling.value = false
@@ -252,6 +263,7 @@ function reset() {
   num1.value = ''; num2.value = ''; num3.value = ''
   guaDisplayTitle.value = ''; guaPoem.value = ''; guaJiyi.value = ''
   changedGuaDisplayTitle.value = ''; changedGuaPoem.value = ''; changedGuaJiyi.value = ''
+  mainGuaId.value = null; changedGuaId.value = null
 
   rolling.value = false
   glowing.value = false
@@ -259,29 +271,18 @@ function reset() {
 
 function getPlumResultData() {
   return {
-    title: guaDisplayTitle.value,
-    poem: guaPoem.value,
-    jiyi: guaJiyi.value,
-    hasChanging: hasChanging.value,
-    changedTitle: changedGuaDisplayTitle.value,
-    changedPoem: changedGuaPoem.value,
-    changedJiyi: changedGuaJiyi.value
+    id: mainGuaId.value,
+    changedId: hasChanging.value ? changedGuaId.value : null
   }
 }
 
-// ─── 💡 【手势握拳起卦监听】 ───
-function handleGestureClick(e) {
-  if (e.detail.state === 'fist' && !rolling.value) {
-    onMainBtn()
-  }
-}
-
+function onPointReset() { if (phase.value === 'result') reset() }
 onMounted(() => {
-  document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
 })
 </script>
 

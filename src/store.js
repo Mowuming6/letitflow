@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import { THEMES, buildThemeStyle } from './theme.js'
+import { trackDecision } from './composables/useCounters.js'
 
 function formatTime(date) {
   const y = date.getFullYear()
@@ -11,13 +12,16 @@ function formatTime(date) {
 }
 
 const savedTheme = localStorage.getItem('app_theme') || 'jin'
+const savedIsDay = localStorage.getItem('app_is_day') === 'true'   // 昼夜：true=昼，false=夜（默认）
 const savedHistory = JSON.parse(localStorage.getItem('divination_history') || '[]')
 const savedAiMessages = JSON.parse(localStorage.getItem('ai_messages_history') || '[]')
 
 export const store = reactive({
   themeKey: savedTheme,
+  isDay: savedIsDay,   // 昼夜状态（持久化，跨页面/刷新保留，与主题色同机制）
   isDark: localStorage.getItem('app_is_dark') === 'true',
   isGesture: localStorage.getItem('app_is_gesture') === 'true',
+  topBarVisible: false,  // 顶栏显隐（桌面端鼠标移入 / 手势光标移到上方时置真，便于手势悬停操作）
   history: savedHistory,
   aiMessages: savedAiMessages,
   aiSystemPrompt: localStorage.getItem('ai_system_prompt') || '',
@@ -52,6 +56,11 @@ export const store = reactive({
     localStorage.setItem('app_theme', key)
   },
 
+  setDayNight(val) {
+    this.isDay = val
+    localStorage.setItem('app_is_day', val ? 'true' : 'false')
+  },
+
   saveHistory(type, result, desc) {
     const record = {
       id: Date.now(),
@@ -63,6 +72,8 @@ export const store = reactive({
     this.history.unshift(record)
     if (this.history.length > 100) this.history = this.history.slice(0, 100)
     localStorage.setItem('divination_history', JSON.stringify(this.history))
+    // 每次产生占卜结果即累加全局「决策次数」计数
+    trackDecision()
     return record
   },
 

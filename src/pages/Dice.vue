@@ -4,23 +4,30 @@
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
-      <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
-        <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
-          <div class="help-popup">
-            <div class="help-popup-close" @click="showHelpPopup = false">×</div>
-            <div class="help-popup-title">使用说明</div>
-            <span class="help-popup-content">相信骰子之神，投就完了！
+      <Teleport to="body">
+        <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
+          <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
+            <div class="help-popup">
+              <div class="help-popup-close" @click="showHelpPopup = false">×</div>
+              <div class="help-popup-title">使用说明</div>
+              <span class="help-popup-content">相信骰子之神，投就完了！
 
 一种用于麻将等游戏或赌博的用具，用骨头、木头、塑料等制成的立方体，六个面分别刻一二三四五六点。目前已知最早的骰子实物出土于中东，可追溯至公元前24世纪，中国境内目前发现最早的骰子出土于山东青州的战国墓中，距今已有2300余年历史。
 
 如何使用：
 可点击按钮或用手指投掷。
-【手势】：开启手势后，在镜头前【上下挥动手掌】，即可抛动骰子。【握拳】可重新开始。
+
+【手势】：
+【上下挥动手掌】，即可抛动骰子
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
 
 答案仅供参考，最终决定永远由你自己做出。</span>
-        </div>
-      </div>
-      </Transition>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
       <div class="page-title">骰子之神</div>
       <div class="page-subtitle">轻摇方寸骰，万事定分明</div>
 
@@ -56,7 +63,7 @@
 import { helpCurtainBeforeEnter, helpCurtainEnter, helpCurtainLeave } from '../composables/useCurtainMotion.js'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { store } from '../store.js'
-import { play, playBounce } from '../sound.js'
+import { play, playBounce, vib } from '../sound.js'
 
 const themeStyle = computed(() => store.getThemeStyle())
 const canvasRef = ref(null)
@@ -171,15 +178,10 @@ function handleGesture(e) {
   }
 }
 
-function handleGestureClick(e) {
-  if (showResult.value && e.detail.state === 'fist' && !rolling.value) {
-    reset()
-  }
-}
-
+function onPointReset() { if (showResult.value) reset() }
 onMounted(() => {
   document.addEventListener('gesture-trigger', handleGesture)
-  document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
   dpr = window.devicePixelRatio || 2
   const cv = canvasRef.value
   const rect = cv.getBoundingClientRect()
@@ -191,7 +193,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('gesture-trigger', handleGesture)
-  document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
   if (raf) cancelAnimationFrame(raf)
 })
 
@@ -273,6 +275,7 @@ function onMouseUp(e){if(!_md)return;_md=false;onTouchEnd({changedTouches:[{clie
 
 function throwDice(upSpeed){
   if(phase!=='idle'&&phase!=='done')return
+  vib('heavy')      // 投掷瞬间（用户手势内）触发重震动，避免落地异步回调被浏览器拦截
   play('diceRoll');const force=Math.min(upSpeed/600,3.0)
   velY=5.5*force+3.5;posY=0;vax=(Math.random()-0.5)*20;vay=(Math.random()-0.5)*20+9;vaz=(Math.random()-0.5)*10
   phase='throw';rolling.value=true;showResult.value=false;tipText.value=''
@@ -285,6 +288,7 @@ function rollDice(){ throwDice(450+Math.random()*350) }
 function onDone(n){
   vax=vay=vaz=0;posY=0
   setTimeout(()=>play('stickLand'),0)
+  vib('heavy')        // 骰子落地：重震动反馈
   const opts=optionText.value?optionText.value.split(/[,，、\s]+/).map(s=>s.trim()).filter(Boolean):[]
   const opt=opts.length>0?opts[(n-1)%opts.length]:''
   diceNum.value=n;rolling.value=false;showResult.value=true

@@ -53,6 +53,19 @@ body {
   font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  /* 禁用全局文本选中（如果需要某些输入框可选，可以在输入框单独开启） */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 图片防盗基本限制 (禁止长按保存、拖拽、选中) */
+img {
+  -webkit-touch-callout: none;    /* 禁用 iOS/Android 微信等长按弹出菜单 */
+  -webkit-user-select: none;      /* 禁用图片选中 */
+  user-select: none;
+  -webkit-user-drag: none;        /* 禁用 Safari/Chrome 等拖拽图片 */
+  user-drag: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0); /* 禁用移动端点击高亮 */
 }
 
 
@@ -399,6 +412,9 @@ body {
   background: rgba(0,0,0,0.42);
   z-index: 9999;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .help-popup {
   width: min(84vw, 380px);
@@ -406,10 +422,7 @@ body {
   background: #FFFFFF;
   border-radius: 12px;
   padding: 24px 16px 18px;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate3d(-50%, -50%, 0);
+  position: relative;
   box-shadow: 0 8px 30px rgba(0,0,0,0.16);
   overflow: hidden;
   display: flex;
@@ -436,6 +449,7 @@ body {
   line-height: 1.8;
   white-space: pre-wrap;
   overflow-y: auto;
+  overscroll-behavior: contain;
   flex: 1;
 }
 .help-popup-close {
@@ -456,6 +470,11 @@ body.dialog-open .container::before,
 body.dialog-open .container::after {
   animation-play-state: paused;
 }
+
+/* 弹窗打开时锁定页面/滚动容器滚动，滚轮只滚动弹窗自身内容 */
+html.dialog-open,
+body.dialog-open { overflow: hidden; }
+body.dialog-open .ds-root { overflow: hidden; }
 
 /* ===== Toast / Modal ===== */
 .toast-overlay {
@@ -812,10 +831,15 @@ body.dialog-open .container::after {
   background-color: #0c0c10 !important;
   color: #E6E6EB !important;
 }
+/* 启用全局夜景背景(.night-bg)时，去掉 app-shell 自身的不透明黑底，
+   否则它会盖住 z-index:-1 的夜.png（首页无 .night-bg，仍保留黑底） */
+.app-shell.dark.night-bg {
+  background-color: transparent !important;
+}
 
-/* 动态暗黑模式变量：自动基于各个主题的主色调进行15%的不透明夜空极光渐变 */
+/* 动态暗黑模式变量 */
 .app-shell.dark :root, .app-shell.dark {
-  --page-bg: linear-gradient(180deg, rgba(var(--primary-rgb), 0.14) 0%, #0c0c10 80%) !important;
+  --page-bg: #0c0c10 !important;
   --primary-light: rgba(var(--primary-rgb), 0.11) !important;
 }
 
@@ -826,23 +850,85 @@ body.dialog-open .container::after {
   box-shadow: 0 4px 16px rgba(0,0,0,0.22), 0 2px 6px rgba(var(--primary-rgb), 0.08) !important;
 }
 .app-shell.dark .tool-card:active {
-  background: rgba(30, 30, 42, 0.93) !important;
+  background: rgba(52, 52, 72, 0.93) !important;
 }
 
 /* 文字色彩黑夜清洗 */
 .app-shell.dark .card-name {
   color: #E1E1E6 !important;
 }
-.app-shell.dark .main-card,
+/* 黑夜：主卡片半透毛玻璃效果 */
+.app-shell.dark .main-card {
+  background: #4D5173 !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #D6D6DF !important;
+  border: 1px solid rgba(var(--primary-rgb), 1) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.36), 0 0 6px 1px var(--primary-light) !important;
+}
+/* 黑夜：梅花易数(.mode-tab) / 塔罗·雷诺曼(.draw-btn) / 历史(.filter-tab) 顶部切换 tab 符合黑夜模式 */
+.app-shell.dark .mode-tab,
+.app-shell.dark .draw-btn,
+.app-shell.dark .filter-tab {
+  color: rgba(255,255,255,0.72) !important;
+  background: #2B2D40 !important;
+  border-color: rgba(255,255,255,0.16) !important;
+}
+/* 黑夜：四个页面选中的 tab 符合黑夜（金底白字，仅颜色，不加边框发光） */
+.app-shell.dark .mode-on,
+.app-shell.dark .draw-on,
+.app-shell.dark .filter-tab.active {
+  color: #FFFFFF !important;
+  background: var(--primary) !important;
+  border-color: var(--primary-light) !important;
+}
+/* 黑夜：占卜页（首页展示页除外）左上手势按钮 + 右上说明按钮：背景 #4D5173，字体/边框 primaryLight */
+.app-shell.dark .gesture-btn,
+.app-shell.dark .help-btn {
+  background: #4D5173 !important;
+  color: var(--primary-light) !important;
+  border-color: var(--primary-light) !important;
+}
+/* 黑夜：手势开启态保持 primary 金底 + 白字高亮
+   （首页展示页 DiceShowcase 的 .ds-gesture-btn 不在此列，保持与昼夜按钮一致的玻璃拟态风格） */
+.app-shell.dark .gesture-btn.active {
+  background: var(--primary) !important;
+  color: #FFFFFF !important;
+  border-color: var(--primary-light) !important;
+}
 .app-shell.dark .help-popup,
 .app-shell.dark .theme-popup {
-  background-color: #15151e !important;
-  color: #D6D6DF !important;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.36) !important;
+  background-color: rgba(0,0,0,0.7) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--primary) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.36), 0 0 6px 1px var(--primary-light) !important;
+}
+/* teleport 到 body 的弹窗（脱离 .app-shell）使用 :root.dark 命中黑夜样式 */
+:root.dark .help-popup,
+:root.dark .theme-popup {
+  background-color: rgba(0,0,0,0.7) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--primary) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.36), 0 0 6px 1px var(--primary-light) !important;
 }
 .app-shell.dark .theme-btn {
   background-color: #181824 !important;
 }
+/* 黑夜：历史记录条符合黑夜模式 */
+.app-shell.dark .history-item {
+  background: #2B2D40 !important;
+  border-color: rgba(255,255,255,0.14) !important;
+}
+.app-shell.dark .history-item.selected {
+  background: #34374F !important;
+  border-color: var(--primary) !important;
+}
+.app-shell.dark .item-result { color: #EDEDF2 !important; }
+.app-shell.dark .item-desc { color: rgba(255,255,255,0.5) !important; }
+.app-shell.dark .item-time { color: rgba(255,255,255,0.4) !important; }
+.app-shell.dark .empty-text { color: rgba(255,255,255,0.6) !important; }
+.app-shell.dark .empty-sub { color: rgba(255,255,255,0.35) !important; }
+.app-shell.dark .checkbox { border-color: rgba(255,255,255,0.3) !important; }
 
 /* 导航、文本及副标题 */
 .app-shell.dark .page-title,
@@ -852,16 +938,32 @@ body.dialog-open .container::after {
 .app-shell.dark .theme-popup-title {
   color: #FFFFFF !important;
 }
+:root.dark .help-popup-title,
+:root.dark .theme-popup-title {
+  color: #FFFFFF !important;
+}
+.app-shell.dark .top-slogan,
 .app-shell.dark .page-subtitle,
 .app-shell.dark .hd-slogan,
 .app-shell.dark .mode-label {
   color: #8E8E9F !important;
 }
+/* 黑夜模式：顶部 slogan 与「旦暮一签，吉凶自见」副标题不透明度保持一致，柔和融入夜景 */
+.app-shell.dark .top-slogan,
+.app-shell.dark .page-subtitle {
+  opacity: 0.8;
+}
+/* 黑夜：slogan 与每页副标题提高亮度，避免看不清 */
+.app-shell.dark .top-slogan,
+.app-shell.dark .page-subtitle {
+  color: #C2C2D4 !important;
+  opacity: 1 !important;
+}
 
 /* 输入框黑夜美化 */
 .app-shell.dark .input-field {
-  background-color: #1e1e2b !important;
-  border-color: #2c2c3c !important;
+  background-color: #363B63 !important;
+  border-color: #4a4a66 !important;
   color: #FFFFFF !important;
 }
 
@@ -877,7 +979,7 @@ body.dialog-open .container::after {
   color: #8E8E9F !important;
 }
 .app-shell.dark .sidebar-item:hover {
-  background: rgba(var(--primary-rgb), 0.12) !important;
+  background: var(--primary-dark) !important;
 }
 
 /* 分割线和弹窗切换项 */
@@ -890,47 +992,216 @@ body.dialog-open .container::after {
   background-color: #1c1c28 !important;
 }
 .app-shell.dark .mode-btn-day.active {
-  background-color: #2a2a3c !important;
+  background-color: #3a3a54 !important;
   color: #FFFFFF !important;
 }
+
+/* 黑夜模式：占卜界面主按钮/AI解读按钮的渐变改为 primaryLight→primary，字体改黑色 */
+.app-shell.dark .btn-gold,
+.app-shell.dark .btn-interpret,
+.app-shell.dark .mini-interpret-btn,
+.app-shell.dark .ai-action-btn {
+  background: linear-gradient(135deg, var(--primary-light), var(--primary)) !important;
+  color: #000000 !important;
+}
+/* teleport 到 body 的弹窗（脱离 .app-shell）使用 :root.dark 命中黑夜样式 */
+:root.dark .btn-gold,
+:root.dark .btn-interpret,
+:root.dark .mini-interpret-btn,
+:root.dark .ai-action-btn {
+  background: linear-gradient(135deg, var(--primary-light), var(--primary)) !important;
+  color: #000000 !important;
+}
+
+/* 黑夜模式：占卜界面内容展示窗口（白昼用 primaryLight 浅色底）改为 primaryDark 深色底，与夜景协调 */
+.app-shell.dark .slot-machine,
+.app-shell.dark .wheel-wrap,
+.app-shell.dark .deck-display,
+.app-shell.dark .shuffle-area,
+.app-shell.dark .fan-wrap,
+.app-shell.dark .stage-area,
+.app-shell.dark .picked-card-empty,
+.app-shell.dark .bagua-wrap {
+  background: #1C1930 !important;
+  background-color: #1C1930 !important;
+}
+
 
 /* 卦签展示及AI */
 .app-shell.dark .qian-result,
 .app-shell.dark .result-box,
 .app-shell.dark .result-detail,
-.app-shell.dark .hex-display {
-  background: rgba(20, 20, 28, 0.90) !important;
-  border-color: rgba(var(--primary-rgb), 0.38) !important;
+.app-shell.dark .hex-display,
+.app-shell.dark .gua-result-card {
+  background: #363B63 !important;
+  color: #FFFFFF !important;
+  border-color: var(--primary-light) !important;
   outline-color: rgba(var(--primary-rgb), 0.04) !important;
+}
+/* 黑夜：答案结果框(答案之书)左上·右下古风装饰直角 → primaryLight（原 primary） */
+.app-shell.dark .result-box::before,
+.app-shell.dark .result-box::after {
+  border-color: var(--primary-light) !important;
+}
+/* 黑夜模式：事业/感情等幸运卡片背景 */
+.app-shell.dark .lucky-item {
+  background: #363B63 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+/* 黑夜模式：今日运势“中吉”等评级标签 → primaryLight */
+.app-shell.dark .fortune-label {
+  color: var(--primary-light) !important;
+}
+/* 黑夜：结果描述文字改白；按白天灰阶保留层次（非纯黑/带透明 → 相应半透明白，见 req7） */
+.app-shell.dark .qian-title,
+.app-shell.dark .result-title {
+  color: #FFFFFF !important;
+}
+.app-shell.dark .fortune-desc,
+.app-shell.dark .qian-meta,
+.app-shell.dark .gua-meta,
+.app-shell.dark .yao-label {
+  color: rgba(255,255,255,0.7) !important;
+}
+.app-shell.dark .qian-poem,
+.app-shell.dark .gua-poem,
+.app-shell.dark .tarot-name,
+.app-shell.dark .leno-name,
+.app-shell.dark .detail-meaning,
+.app-shell.dark .q-content-text,
+.app-shell.dark .result-text {
+  color: rgba(255,255,255,0.88) !important;
+}
+.app-shell.dark .qian-essence,
+.app-shell.dark .detail-ext {
+  color: rgba(255,255,255,0.6) !important;
+}
+/* 黑夜：塔罗/雷诺曼 正位·性质·标题等强调色 → primaryLight（原 primary） */
+.app-shell.dark .tarot-orient,
+.app-shell.dark .leno-nature,
+.app-shell.dark .detail-title {
+  color: var(--primary-light) !important;
+}
+/* 黑夜：梅花易数结果内 primary 强调 → primaryLight */
+.app-shell.dark .gua-display-title,
+.app-shell.dark .gua-changed-label,
+.app-shell.dark .change-o {
+  color: var(--primary-light) !important;
+}
+/* 黑夜：六爻变卦（变爻标记 change-o）改用 primary（限定 hex-display，不影响梅花易数） */
+.app-shell.dark .hex-display .change-o {
+  color: var(--primary) !important;
+}
+/* 黑夜：六爻变爻行（老阴○/老阳●，row-changing）的卦线也改用 primary（区别于普通爻的 primary-light） */
+.app-shell.dark .hex-display .hex-line-row.row-changing .yang-bar,
+.app-shell.dark .hex-display .hex-line-row.row-changing .yin-bar-l,
+.app-shell.dark .hex-display .hex-line-row.row-changing .yin-bar-r {
+  background: var(--primary) !important;
+}
+/* 黑夜：六爻变爻行（老阴/老阳，row-changing）的卦线用 primary，区别于其他爻的 primary-light */
+.app-shell.dark .hex-display .row-changing .yang-bar,
+.app-shell.dark .hex-display .row-changing .yin-bar-l,
+.app-shell.dark .hex-display .row-changing .yin-bar-r {
+  background: var(--primary) !important;
 }
 .app-shell.dark .q-tab {
   color: #7E7E8F !important;
 }
 .app-shell.dark .q-tab-on {
-  color: var(--primary) !important;
+  color: var(--primary-light) !important;
+  border-bottom-color: var(--primary-light) !important;
+}
+/* 黑夜：六爻阴阳爻条/点 → primaryLight（原 primary） */
+.app-shell.dark .yang-bar,
+.app-shell.dark .yin-bar-l,
+.app-shell.dark .yin-bar-r {
+  background: var(--primary-light) !important;
+}
+.app-shell.dark .dot-yang,
+.app-shell.dark .dot-yin,
+.app-shell.dark .yao-change-mark {
+  color: var(--primary-light) !important;
+}
+/* 黑夜：六爻爻进度区背景与下方答案框一致（#4D5173） */
+.app-shell.dark .yao-progress {
+  background: #4D5173 !important;
 }
 .app-shell.dark .help-popup-close {
   color: #8E8E9F !important;
 }
+/* 黑夜：说明框内容强制白字（压过内联深灰）；strong 保留 primaryLight 强调 */
+.app-shell.dark .help-popup-content { color: #FFFFFF !important; }
+.app-shell.dark .help-popup-content strong { color: var(--primary-light) !important; }
+/* 首页手势弹窗：标题"各页面互动手势"黑夜下强制 primaryLight 并加粗，确保清晰可见 */
+.app-shell.dark .help-popup-content strong.gh-section {
+  color: var(--primary-light) !important;
+  font-weight: 700 !important;
+}
+/* teleport 到 body 的弹窗使用 :root.dark 命中黑夜样式 */
+:root.dark .help-popup-close {
+  color: #8E8E9F !important;
+}
+:root.dark .help-popup-content { color: #FFFFFF !important; }
+:root.dark .help-popup-content strong { color: var(--primary-light) !important; }
+:root.dark .help-popup-content strong.gh-section {
+  color: var(--primary-light) !important;
+  font-weight: 700 !important;
+}
+/* 黑夜：说明框内部滚动条适配 */
+.app-shell.dark .help-popup-content::-webkit-scrollbar { width: 6px; }
+.app-shell.dark .help-popup-content::-webkit-scrollbar-track { background: transparent; }
+.app-shell.dark .help-popup-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 4px; }
+.app-shell.dark .help-popup-content::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+.app-shell.dark .help-popup-content { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.25) transparent; }
+/* 黑夜：整页滚动条适配（滚动容器为 body，用 :has 命中黑夜态） */
+body:has(.app-shell.dark)::-webkit-scrollbar { width: 8px; height: 8px; }
+body:has(.app-shell.dark)::-webkit-scrollbar-track { background: transparent; }
+body:has(.app-shell.dark)::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+body:has(.app-shell.dark)::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+body:has(.app-shell.dark) { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
 .app-shell.dark .interp-box {
   background: #1c1c28 !important;
 }
 .app-shell.dark .interp-text {
   color: #C0C0CB !important;
 }
+/* 黑夜：AI 解读对话框界面整体 4D5173，primaryLight/primaryDark 互换 */
+.app-shell.dark .ai-chat-panel,
+.app-shell.dark .ai-message-list,
+.app-shell.dark .ai-input-bar {
+  background: #4D5173 !important;
+}
+.app-shell.dark .ai-chat-panel {
+  border-color: rgba(255,255,255,0.12) !important;
+}
+.app-shell.dark .ai-input-bar {
+  border-top-color: rgba(255,255,255,0.12) !important;
+}
 .app-shell.dark .ai-bubble {
-  background: #1c1c28 !important;
-  color: #E6E6EB !important;
+  background: #4D5173 !important;
+  color: #ECECF2 !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
 }
 .app-shell.dark .user-bubble {
   background: var(--primary) !important;
   color: #FFFFFF !important;
 }
+/* 头部/横幅底色：primary-light → primary-dark（互换） */
+.app-shell.dark .ai-panel-header,
+.app-shell.dark .ai-inline-interpret-banner {
+  background: var(--primary-dark) !important;
+}
+/* 文字强调：primary-dark → primary-light（互换） */
+.app-shell.dark .ai-header-name,
+.app-shell.dark .ai-banner-text,
+.app-shell.dark .msg-content strong {
+  color: var(--primary-light) !important;
+}
 .app-shell.dark .deck-card,
 .app-shell.dark .shuffle-card,
 .app-shell.dark .picked-card,
 .app-shell.dark .leno-card-img-wrap {
-  background-color: #12121a !important;
+  background-color: #25253c !important;
   border-color: rgba(var(--primary-rgb), 0.35) !important;
 }
 

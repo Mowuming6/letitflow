@@ -8,6 +8,7 @@
     <div class="q-tabs">
       <div v-for="(label, i) in TAB_LABELS" :key="i"
         class="q-tab" :class="{ 'q-tab-on': activeTab === i }"
+        role="button" tabindex="0"
         @click="$emit('tabChange', i)">{{ label }}</div>
     </div>
     <div class="q-tab-content">

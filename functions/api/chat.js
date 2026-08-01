@@ -3,6 +3,12 @@
 // - Enforces anonymous daily quota (default: 5/day)
 // - Streams response as SSE: text chunks + meta/done events
 
+import QIAN_DATABASE from '../../src/pages/qian_data_module.js'
+import GUA_DATABASE from '../../src/pages/64gua_module.js'
+import LENO_DATABASE from '../../src/pages/lenormand_data.js'
+import ANSWERS_DATABASE from '../../src/pages/answers_data.js'
+import { TAROT_KEYWORDS, MAJOR, SUITS, RANKS } from '../../src/pages/tarot_data.js'
+
 const DAILY_LIMIT = 10
 const UID_COOKIE = 'lf_uid'
 
@@ -78,6 +84,115 @@ function dayKeyCN() {
   const m = String(now.getUTCMonth() + 1).padStart(2, '0')
   const d = String(now.getUTCDate()).padStart(2, '0')
   return `${y}${m}${d}`
+}
+
+// 🌐 服务端数据自动补全与合并算法（防盗安全核心）
+function enrichResultData(pageType, rawResult) {
+  if (!rawResult) return null
+
+  try {
+    // 1. 观音灵签补全
+    if (pageType === 'qian') {
+      const id = parseInt(rawResult.id)
+      if (isNaN(id)) return rawResult
+      const qianItem = QIAN_DATABASE.find(item => {
+        const numPart = item["灵签"]?.match(/第\s*(\d+)\s*签/)
+        return numPart && parseInt(numPart[1]) === id
+      })
+      if (qianItem) {
+        return {
+          title: qianItem["灵签"],
+          poem: qianItem["灵签诗文"],
+          shiyi: qianItem["诗意"],
+          jieyue: qianItem["解曰"],
+          essence: qianItem["本签精髓"],
+          activeTabLabel: rawResult.activeTabLabel || '整体解释',
+          tabContent: qianItem[rawResult.activeTabLabel] || qianItem["整体解释"] || qianItem["详细解释"]
+        }
+      }
+    }
+
+    // 2. 六爻 / 梅花易数补全
+    if (pageType === 'liuyao' || pageType === 'plum') {
+      const mainId = parseInt(rawResult.id)
+      const changedId = parseInt(rawResult.changedId)
+
+      const mainGua = GUA_DATABASE.find(g => g["卦序号"] === mainId)
+      const data = {
+        title: mainGua ? mainGua["卦全称"] : `第${mainId}卦`,
+        poem: mainGua ? mainGua["象曰歌谣"] : '',
+        jiyi: mainGua ? mainGua["卦释义"] : '',
+        hasChanging: !isNaN(changedId) && changedId > 0
+      }
+
+      if (data.hasChanging) {
+        const changedGua = GUA_DATABASE.find(g => g["卦序号"] === changedId)
+        data.changedTitle = changedGua ? changedGua["卦全称"] : `第${changedId}卦`
+        data.changedPoem = changedGua ? changedGua["象曰歌谣"] : ''
+        data.changedJiyi = changedGua ? changedGua["卦释义"] : ''
+      }
+      return data
+    }
+
+    // 3. 塔罗牌数组补全
+    if (pageType === 'tarot') {
+      const cards = Array.isArray(rawResult) ? rawResult : (rawResult.cards || [])
+      return cards.map((c, i) => {
+        const cardId = parseInt(c.id)
+        const isReversed = !!c.reversed
+
+        let name = `卡牌 #${cardId}`
+        if (cardId >= 0 && cardId < 22) {
+          name = MAJOR[cardId]?.name || name
+        } else if (cardId >= 22 && cardId < 78) {
+          const minorIdx = cardId - 22
+          const suitIdx = Math.floor(minorIdx / 14)
+          const rankIdx = minorIdx % 14
+          name = (SUITS[suitIdx]?.suit || '') + (RANKS[rankIdx] || '')
+        }
+
+        const keywords = TAROT_KEYWORDS[cardId] || []
+        const meaning = isReversed ? keywords[1] : keywords[0]
+
+        return {
+          name: name,
+          orientation: isReversed ? '逆位' : '正位',
+          meaning: meaning
+        }
+      })
+    }
+
+    // 4. 雷诺曼卡数组补全
+    if (pageType === 'lenormand') {
+      const cards = Array.isArray(rawResult) ? rawResult : (rawResult.cards || [])
+      return cards.map(c => {
+        const cardId = parseInt(c.id)
+        const matched = LENO_DATABASE.find(item => item.id === cardId)
+        return {
+          name: matched ? matched.name : `卡牌 #${cardId}`,
+          meaning: matched ? matched.meaning : '',
+          extended: matched ? matched.extended : ''
+        }
+      })
+    }
+
+    // 5. 答案之书补全
+    if (pageType === 'book') {
+      const id = parseInt(rawResult.id)
+      const matched = ANSWERS_DATABASE[id]
+      if (matched) {
+        return {
+          zh: matched.zh,
+          en: matched.en
+        }
+      }
+    }
+
+  } catch (err) {
+    console.error('Error enriching result data in Server-side:', err)
+  }
+
+  return rawResult
 }
 
 function buildSystemPrompt() {
@@ -243,7 +358,8 @@ export async function onRequestPost(context) {
 
     const pageType = String(body.pageType || '')
     const question = typeof body.question === 'string' ? body.question : ''
-    const resultData = body.resultData
+    const rawResultData = body.resultData
+    const resultData = enrichResultData(pageType, rawResultData) // 👈 云端自动补全：客户端绝不暴露完整释义数据，安全防盗
     const mode = body.mode === 'interpretation' ? 'interpretation' : 'chat'
     const clientMessages = sanitizeMessages(body.messages)
 

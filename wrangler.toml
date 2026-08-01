@@ -1,0 +1,19 @@
+name = "divination-h5"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-11-01"
+
+# 全局共享计数器所需的 KV 命名空间绑定
+# 部署前请先创建命名空间并填入其 id：
+#   npx wrangler kv namespace create COUNTER_KV
+# 将命令输出的 id 复制到下面的 id 字段。
+[[kv_namespaces]]
+binding = "COUNTER_KV"
+id = "29e8c23111b447658ce75dc452f715e7"
+
+# 说明：
+# 1) 安装依赖：npm install
+# 2) 本地预览（含 Functions）：npx wrangler pages dev dist
+# 3) 部署：npx wrangler pages deploy
+# 若 KV 绑定未通过 wrangler.toml 生效，也可在 Cloudflare 控制台
+#   （该 Pages 项目 → Settings → Functions → KV namespace bindings）
+#   手动添加绑定，名称填 COUNTER_KV。

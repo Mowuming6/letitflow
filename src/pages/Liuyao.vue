@@ -4,6 +4,7 @@
     <div class="main-card">
       <button class="gesture-btn" :class="{ 'active': store.isGesture }" @click="store.setGesture(!store.isGesture)">手势</button>
       <button class="help-btn" @click="showHelpPopup = true">?</button>
+      <Teleport to="body">
       <Transition :css="false" @before-enter="helpCurtainBeforeEnter" @enter="helpCurtainEnter" @leave="helpCurtainLeave">
         <div v-if="showHelpPopup" class="help-mask" @click.self="showHelpPopup = false">
           <div class="help-popup">
@@ -15,7 +16,12 @@
 1.在占卜金钱卦时要专心一致，摒除杂念，静默一分钟，心念集中于你所测之事，如婚姻、事业、运途、流年、工作、财运等。
 2.默念自己姓名，出生时辰，年龄，现在居住地址。
 3.点击按钮或使用手指掷出金钱卦六次，查看结果。
-4.【手势】：开启手势后，在镜头前【上下挥动手掌】，即可抛动铜钱。【握拳】可重新开始。
+
+【手势】：
+在镜头前【上下挥动手掌】，即可抛动铜钱。
+伸出【食指】3秒=触发重新占卜
+【短暂握拳】=点击（点按钮、展开 AI 解读等）
+【保持握拳状态】2秒以上并上下移动可上下翻阅页面
 
 注意：占卜金钱卦时，同一事件短时间内第一次卜卦最准，多卜无益。
 
@@ -23,6 +29,7 @@
         </div>
       </div>
       </Transition>
+      </Teleport>
       <div class="page-title">六爻金钱卦</div>
       <div class="page-subtitle">摇钱排六爻，五行断吉凶</div>
       <input class="input-field" placeholder="输入所问之事（可选）" v-model="question" />
@@ -96,6 +103,8 @@ const tabContents = ref([]), changedTabContents = ref([])
 const guaDisplayTitle = ref(''), guaPoem = ref(''), guaJiyi = ref('')
 const changedGuaDisplayTitle = ref(''), changedGuaPoem = ref(''), changedGuaJiyi = ref('')
 const hasChanging = ref(false)
+const mainGuaId = ref(null)
+const changedGuaId = ref(null)
 
 const GUA_MAP = {}
 GUA_DATA.forEach(g => { GUA_MAP[g['卦象']] = g })
@@ -157,15 +166,10 @@ function handleGesture(e) {
   }
 }
 
-function handleGestureClick(e) {
-  if (yaoLines.value.length >= 6 && e.detail.state === 'fist') {
-    reset()
-  }
-}
-
+function onPointReset() { if (showResult.value) reset() }
 onMounted(async()=>{
   document.addEventListener('gesture-trigger', handleGesture)
-  document.addEventListener('gesture-click', handleGestureClick)
+  document.addEventListener('gesture-point-reset', onPointReset)
   const cv=canvasRef.value;const rect=cv.getBoundingClientRect();const dpr=window.devicePixelRatio||2
   cv.width=rect.width*dpr;cv.height=rect.height*dpr;W=cv.width;H=cv.height
   gl=cv.getContext('webgl',{antialias:true,alpha: true,depth:true});if(!gl)return
@@ -182,7 +186,7 @@ onMounted(async()=>{
 })
 onUnmounted(()=>{
   document.removeEventListener('gesture-trigger', handleGesture)
-  document.removeEventListener('gesture-click', handleGestureClick)
+  document.removeEventListener('gesture-point-reset', onPointReset)
   if(raf)cancelAnimationFrame(raf)
 })
 
@@ -266,17 +270,19 @@ function onAllDone(){
     guaPoem.value=guaEntry?(guaEntry['象曰歌谣']||''):''
     guaJiyi.value=guaEntry?(guaEntry['卦释义']||''):''
     showResult.value=true
+    mainGuaId.value=guaEntry?guaEntry['卦序号']:null
     const hasC=lines.some(l=>l.changing);hasChanging.value=hasC
     if(hasC){
       const cL=lines.map(l=>({...l,yang:l.changing?!l.yang:l.yang,type:l.changing?(l.yang?'yin':'yang'):l.type}))
       const cLower=cL.slice(0,3).map(l=>l.yang?1:0),cUpper=cL.slice(3,6).map(l=>l.yang?1:0)
       const cLIdx=cLower[2]*4+cLower[1]*2+cLower[0],cUIdx=cUpper[2]*4+cUpper[1]*2+cUpper[0]
-      const cKey='上'+BAGUA[cUIdx]+'下'+BAGUA[cLIdx],cEntry=GUA_MAP[cKey]
+      const cKey='上'+BAGUA[cUIdx]+'下'+BAGUA[cLower[2]*4+cLower[1]*2+cLower[0]],cEntry=GUA_MAP[cKey] // Wait, let's preserve cKey='上'+BAGUA[cUIdx]+'下'+BAGUA[cLIdx]
       const cName=cEntry?cEntry['卦全称']:(BAGUA[cUIdx]+BAGUA[cLIdx])
       changedTabContents.value=cEntry?['事业','经商','求名','外出','婚恋','决策'].map(k=>cEntry[k]||'暂无相关内容。'):Array(6).fill('暂无相关内容。')
       changedGuaDisplayTitle.value=cEntry?(cEntry['卦全称']+' · '+cEntry['卦吉凶等级']):cName
       changedGuaPoem.value=cEntry?(cEntry['象曰歌谣']||''):''
       changedGuaJiyi.value=cEntry?(cEntry['卦释义']||''):''
+      changedGuaId.value=cEntry?cEntry['卦序号']:null
     }
     const liuyaoMain=guaEntry?guaEntry['卦全称']:hexName
     const liuyaoChanged=hasC&&changedGuaDisplayTitle.value?changedGuaDisplayTitle.value.split(' · ')[0]:''
@@ -294,18 +300,14 @@ function reset(){
   guaDisplayTitle.value='';guaPoem.value='';guaJiyi.value=''
   changedGuaDisplayTitle.value='';changedGuaPoem.value='';changedGuaJiyi.value=''
   tabContents.value=[];changedTabContents.value=[];hasChanging.value=false
+  mainGuaId.value=null;changedGuaId.value=null
   tipText.value='向上滑动或点击按钮抛掷铜钱';activeTab.value=0;changedActiveTab.value=0
   coins.forEach(c=>{c._done=false})
 }
 function getLiuyaoResultData() {
   return {
-    title: guaDisplayTitle.value,
-    poem: guaPoem.value,
-    jiyi: guaJiyi.value,
-    hasChanging: hasChanging.value,
-    changedTitle: changedGuaDisplayTitle.value,
-    changedPoem: changedGuaPoem.value,
-    changedJiyi: changedGuaJiyi.value
+    id: mainGuaId.value,
+    changedId: hasChanging.value ? changedGuaId.value : null
   }
 }
 </script>
