@@ -237,7 +237,7 @@ function scrollFanIntoView() {
 
 function showSpread(){
   if(!shuffledDeck.length)shuffledDeck=[...TAROT_CARDS].sort(()=>Math.random()-0.5)
-  liftGen++;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;fanVelocity=0;fanCtx=null
+  liftGen++;hoveredCardIdx.value=-1;clearHoverSelectionTimer();pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;fanVelocity=0;fanCtx=null
   pickedCount.value=0;phase.value='spread'
   setTimeout(()=>{
     initFanCanvas()
@@ -536,7 +536,7 @@ function revealCards(){
     store.saveHistory('🃏 塔罗占卜',desc,question.value || '（用户未输入问题）')
   },res.length*520+900))
 }
-function reset(){revealTimers.forEach(clearTimeout);revealTimers=[];if(fanTimerId){clearTimeout(fanTimerId);fanTimerId=null};liftGen++;fanCtx=null;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;results.value=[];pickedCount.value=0;shuffleCount.value=0;aiInterpretation.value='';deckDisplay.value=Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2}));phase.value='choose'}
+function reset(){revealTimers.forEach(clearTimeout);revealTimers=[];if(fanTimerId){clearTimeout(fanTimerId);fanTimerId=null};liftGen++;hoveredCardIdx.value=-1;clearHoverSelectionTimer();fanCtx=null;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;results.value=[];pickedCount.value=0;shuffleCount.value=0;aiInterpretation.value='';deckDisplay.value=Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2}));phase.value='choose'}
 let fanMouseDown=false
 function onFanMouseDown(e){fanMouseDown=true;onFanTouchStart({touches:[{clientX:e.clientX}]})}
 function onFanMouseMove(e){if(!fanMouseDown)return;onFanTouchMove({touches:[{clientX:e.clientX}]})}

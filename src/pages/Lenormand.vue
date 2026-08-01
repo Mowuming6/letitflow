@@ -221,7 +221,7 @@ function scrollFanIntoView() {
   })
 }
 
-function showSpread(){if(!shuffledDeck.length)shuffledDeck=[...LENORMAND_CARDS].sort(()=>Math.random()-0.5);liftGen++;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;fanVelocity=0;fanCtx=null;pickedCount.value=0;phase.value='spread';setTimeout(()=>{initFanCanvas();scrollFanIntoView()},120)}
+function showSpread(){if(!shuffledDeck.length)shuffledDeck=[...LENORMAND_CARDS].sort(()=>Math.random()-0.5);liftGen++;hoveredCardIdx.value=-1;clearHoverSelectionTimer();pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;fanVelocity=0;fanCtx=null;pickedCount.value=0;phase.value='spread';setTimeout(()=>{initFanCanvas();scrollFanIntoView()},120)}
 function initFanCanvas(){
   initTheme();const cv=fanCanvasRef.value;if(!cv)return
   const vh=window.innerHeight||800
@@ -496,7 +496,7 @@ function revealCards(){
     store.saveHistory('🎴 雷诺曼占卜',res.map(r=>r.name).join('·'),question.value || '（用户未输入问题）')
   },res.length*520+900))
 }
-function reset(){revealTimers.forEach(clearTimeout);revealTimers=[];if(fanTimerId){clearTimeout(fanTimerId);fanTimerId=null};liftGen++;fanCtx=null;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;results.value=[];pickedCount.value=0;shuffleCount.value=0;interpretation.value='';deckDisplay.value=Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2}));phase.value='choose'}
+function reset(){revealTimers.forEach(clearTimeout);revealTimers=[];if(fanTimerId){clearTimeout(fanTimerId);fanTimerId=null};liftGen++;hoveredCardIdx.value=-1;clearHoverSelectionTimer();fanCtx=null;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;results.value=[];pickedCount.value=0;shuffleCount.value=0;interpretation.value='';deckDisplay.value=Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2}));phase.value='choose'}
 let fanMouseDown=false
 function onFanMouseDown(e){fanMouseDown=true;onFanTouchStart({touches:[{clientX:e.clientX}]})}
 function onFanMouseMove(e){if(!fanMouseDown)return;onFanTouchMove({touches:[{clientX:e.clientX}]})}
