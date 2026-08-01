@@ -10,6 +10,10 @@ compatibility_date = "2024-11-01"
 binding = "COUNTER_KV"
 id = "29e8c23111b447658ce75dc452f715e7"
 
+[[kv_namespaces]]
+binding = "AI_KV"
+id = "29e8c23111b447658ce75dc452f715e7"
+
 # 说明：
 # 1) 安装依赖：npm install
 # 2) 本地预览（含 Functions）：npx wrangler pages dev dist
