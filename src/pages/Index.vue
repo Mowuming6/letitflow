@@ -9,11 +9,11 @@
       <div class="ds-dice-caption-text" :class="{ 'is-fading': captionFading }">
         <template v-if="!captionEn">
           <div class="ds-dice-caption-line1">不必纠结 随天意</div>
-          <div class="ds-dice-caption-line2">已帮{{ peopleCount }}人做了{{ decisionCount }}次决定</div>
+          <div v-if="peopleCount !== null" class="ds-dice-caption-line2">已帮{{ peopleCount }}人做了{{ decisionCount }}次决定</div>
         </template>
         <template v-else>
           <div class="ds-dice-caption-line1">Let It Flow</div>
-          <div class="ds-dice-caption-line2">Helped {{ peopleCount }} people make {{ decisionCount }} decisions</div>
+          <div v-if="peopleCount !== null" class="ds-dice-caption-line2">Helped {{ peopleCount }} people make {{ decisionCount }} decisions</div>
         </template>
       </div>
     </div>
