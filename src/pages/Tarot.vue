@@ -169,7 +169,7 @@ SUITS.forEach((s,si)=>RANKS.forEach((rank,ri)=>TAROT_CARDS.push({name:s.suit+ran
 let shuffledDeck=[], shuffleTouchX=0, shuffleDir=0, shuffleGestureCounted=false
 let shuffleCompleteTimer = null
 let fanCtx=null, fanW=1, fanH=1, fanRect=null, fanOffset=0, fanVelocity=0, fanStartX=0, fanPrevX=0, fanTimerId=null
-let pickedIndices=[], liftProgress={}, cardBackImg=null, dpr=2, fanRafPending=false, fanVibStep=0
+let pickedIndices=[], liftProgress={}, liftGen=0, cardBackImg=null, dpr=2, fanRafPending=false, fanVibStep=0, revealTimers=[]
 function getCardSize(fh){const ch=(fh||400)*0.7;return{w:ch/1.5,h:ch}}
 let themeColor='#D4A853', themeGlow='rgba(212,168,83,0.75)', themeBorder='rgba(212,168,83,0.5)'
 
@@ -182,6 +182,7 @@ onMounted(()=>initTheme())
 const cardBackSrc = computed(()=>store.getThemeCardBack())
 
 function startShuffle(){
+  revealTimers.forEach(clearTimeout);revealTimers=[]
   if (shuffleCompleteTimer) {
     clearTimeout(shuffleCompleteTimer)
     shuffleCompleteTimer = null
@@ -236,7 +237,7 @@ function scrollFanIntoView() {
 
 function showSpread(){
   if(!shuffledDeck.length)shuffledDeck=[...TAROT_CARDS].sort(()=>Math.random()-0.5)
-  pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;fanVelocity=0;fanCtx=null
+  liftGen++;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;fanVelocity=0;fanCtx=null
   pickedCount.value=0;phase.value='spread'
   setTimeout(()=>{
     initFanCanvas()
@@ -522,20 +523,20 @@ function pickFanCard(idx){
   pickedCount.value=pickedIndices.length
   if(pickedCount.value>=drawCount.value)setTimeout(()=>revealCards(),650)
 }
-function animateLift(idx){const TARGET=getCardSize(fanH).h*0.3,FRAMES=8;let frame=0;function step(){frame++;const t=frame/FRAMES;liftProgress[idx]=TARGET*(1-(1-t)*(1-t));drawFan();if(frame<FRAMES)setTimeout(step,16)};step()}
+function animateLift(idx){const TARGET=getCardSize(fanH).h*0.3,FRAMES=8;let frame=0;const gen=liftGen;function step(){if(liftGen!==gen)return;frame++;const t=frame/FRAMES;liftProgress[idx]=TARGET*(1-(1-t)*(1-t));drawFan();if(frame<FRAMES)setTimeout(step,16)};step()}
 function revealCards(){
   const res=pickedIndices.map((cardIdx)=>{const card=shuffledDeck[cardIdx]||TAROT_CARDS[cardIdx],reversed=Math.random()<0.3,kw=TAROT_KEYWORDS[card.origIdx],meaning=kw?kw[reversed?1:0]:'';return{name:card.name,symbol:card.symbol,color:card.color,meaning,reversed,img:card.img}})
   pendingResults.value=res;flipState.value=res.map(()=>false);phase.value='flipping'
-  res.forEach((_,i)=>{setTimeout(()=>{play('cardDraw');const s=[...flipState.value];s[i]=true;flipState.value=s},i*520+100)})
-  setTimeout(()=>{
+  res.forEach((_,i)=>{revealTimers.push(setTimeout(()=>{play('cardDraw');const s=[...flipState.value];s[i]=true;flipState.value=s},i*520+100))})
+  revealTimers.push(setTimeout(()=>{
     let aiInterp=''
     if(res.length===3){const[past,present,future]=res;aiInterp=`过去：${past.name}${past.reversed?'(逆位)':''}，${past.meaning}\n现在：${present.name}${present.reversed?'(逆位)':''}，${present.meaning}\n未来：${future.name}${future.reversed?'(逆位)':''}，${future.meaning}`}
     play('cardReveal');results.value=res;aiInterpretation.value=aiInterp;phase.value='result'
     const desc=res.map(r=>r.name+'·'+(r.reversed?'逆位':'正位')).join(' - ')
     store.saveHistory('🃏 塔罗占卜',desc,question.value || '（用户未输入问题）')
-  },res.length*520+900)
+  },res.length*520+900))
 }
-function reset(){if(fanTimerId){clearTimeout(fanTimerId);fanTimerId=null};fanCtx=null;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;results.value=[];pickedCount.value=0;shuffleCount.value=0;aiInterpretation.value='';deckDisplay.value=Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2}));phase.value='choose'}
+function reset(){revealTimers.forEach(clearTimeout);revealTimers=[];if(fanTimerId){clearTimeout(fanTimerId);fanTimerId=null};liftGen++;fanCtx=null;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;results.value=[];pickedCount.value=0;shuffleCount.value=0;aiInterpretation.value='';deckDisplay.value=Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2}));phase.value='choose'}
 let fanMouseDown=false
 function onFanMouseDown(e){fanMouseDown=true;onFanTouchStart({touches:[{clientX:e.clientX}]})}
 function onFanMouseMove(e){if(!fanMouseDown)return;onFanTouchMove({touches:[{clientX:e.clientX}]})}

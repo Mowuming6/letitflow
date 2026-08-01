@@ -170,7 +170,7 @@ const LENORMAND_CARDS=RAW_CARDS.map(c=>({...c,...natureProps(c.nature)}))
 let shuffledDeck=[],shuffleTouchX=0,shuffleDir=0,shuffleGestureCounted=false
 let shuffleCompleteTimer = null
 let fanCtx=null,fanW=1,fanH=1,fanRect=null,fanOffset=0,fanVelocity=0,fanStartX=0,fanPrevX=0,fanTimerId=null
-let pickedIndices=[],liftProgress={},cardBackImg=null,dpr=2,fanRafPending=false,fanVibStep=0
+let pickedIndices=[],liftProgress={},liftGen=0,cardBackImg=null,dpr=2,fanRafPending=false,fanVibStep=0,revealTimers=[]
 function getCardSize(fh){const ch=(fh||400)*0.7;return{w:ch/1.5,h:ch}}
 let themeColor='#D4A853',themeGlow='rgba(212,168,83,0.75)',themeBorder='rgba(212,168,83,0.5)'
 function initTheme(){const t=THEMES[store.themeKey||'jin'],r=parseInt(t.primary.slice(1,3),16),g=parseInt(t.primary.slice(3,5),16),b=parseInt(t.primary.slice(5,7),16);themeColor=t.primary;themeGlow=`rgba(${r},${g},${b},0.75)`;themeBorder=`rgba(${r},${g},${b},0.5)`}
@@ -178,6 +178,7 @@ onMounted(()=>initTheme())
 const cardBackSrc=computed(()=>store.getThemeCardBack())
 
 function startShuffle(){
+  revealTimers.forEach(clearTimeout);revealTimers=[]
   if (shuffleCompleteTimer) {
     clearTimeout(shuffleCompleteTimer)
     shuffleCompleteTimer = null
@@ -220,7 +221,7 @@ function scrollFanIntoView() {
   })
 }
 
-function showSpread(){if(!shuffledDeck.length)shuffledDeck=[...LENORMAND_CARDS].sort(()=>Math.random()-0.5);pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;fanVelocity=0;fanCtx=null;pickedCount.value=0;phase.value='spread';setTimeout(()=>{initFanCanvas();scrollFanIntoView()},120)}
+function showSpread(){if(!shuffledDeck.length)shuffledDeck=[...LENORMAND_CARDS].sort(()=>Math.random()-0.5);liftGen++;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;fanVelocity=0;fanCtx=null;pickedCount.value=0;phase.value='spread';setTimeout(()=>{initFanCanvas();scrollFanIntoView()},120)}
 function initFanCanvas(){
   initTheme();const cv=fanCanvasRef.value;if(!cv)return
   const vh=window.innerHeight||800
@@ -478,12 +479,12 @@ function onFanTouchEnd(e){
 function doFanMomentum(){let vel=fanVelocity;function step(){vel*=0.92;fanOffset-=vel*0.0038;fanOffset=Math.max(-1.25,Math.min(1.25,fanOffset));drawFan();if(Math.abs(vel)>0.25)fanTimerId=setTimeout(step,16)};step()}
 function trySelectFanCard(clientX,clientY){const rect=fanCanvasRef.value?fanCanvasRef.value.getBoundingClientRect():fanRect;if(!rect)return;const lx=clientX-rect.left,ly=clientY-rect.top,total=LENORMAND_CARDS.length,{w:cw,h:ch}=getCardSize(fanH),cx=fanW/2,cy=fanH+500-ch/2,R=500,span=2.0;let bestIdx=-1;for(let i=0;i<total;i++){const angle=-span/2+i*(span/(total-1))-fanOffset;if(Math.abs(angle)>span/2+0.1)continue;const x=cx+Math.sin(angle)*R,y=cy-Math.cos(angle)*R,dx=lx-x,dy=ly-y,cosA=Math.cos(angle),sinA=Math.sin(angle),lc_x=dx*cosA+dy*sinA,lc_y=-dx*sinA+dy*cosA;if(Math.abs(lc_x)<=cw/2+4&&Math.abs(lc_y)<=ch/2+4)bestIdx=i};if(bestIdx>=0)pickFanCard(bestIdx)}
 function pickFanCard(idx){if(pickedIndices.includes(idx))return;if(pickedIndices.length>=drawCount.value)return;play('cardDraw');vib('medium');pickedIndices=[...pickedIndices,idx];pickedList.value=[...pickedIndices];liftProgress[idx]=0;animateLift(idx);pickedCount.value=pickedIndices.length;if(pickedCount.value>=drawCount.value)setTimeout(()=>revealCards(),650)}
-function animateLift(idx){const TARGET=getCardSize(fanH).h*0.3,FRAMES=8;let frame=0;function step(){frame++;const t=frame/FRAMES;liftProgress[idx]=TARGET*(1-(1-t)*(1-t));drawFan();if(frame<FRAMES)setTimeout(step,16)};step()}
+function animateLift(idx){const TARGET=getCardSize(fanH).h*0.3,FRAMES=8;let frame=0;const gen=liftGen;function step(){if(liftGen!==gen)return;frame++;const t=frame/FRAMES;liftProgress[idx]=TARGET*(1-(1-t)*(1-t));drawFan();if(frame<FRAMES)setTimeout(step,16)};step()}
 function revealCards(){
   const res=pickedIndices.map(cardIdx=>{const card=shuffledDeck[cardIdx]||LENORMAND_CARDS[cardIdx];return{id:card.id,name:card.name,nature:card.nature,color:card.color,nc:card.nc,meaning:card.meaning,extended:card.extended,img:`./lenormandcard/${card.id}.jpg`}})
   pendingResults.value=res;flipState.value=res.map(()=>false);phase.value='flipping'
-  res.forEach((_,i)=>{setTimeout(()=>{play('cardDraw');const s=[...flipState.value];s[i]=true;flipState.value=s},i*520+100)})
-  setTimeout(()=>{
+  res.forEach((_,i)=>{revealTimers.push(setTimeout(()=>{play('cardDraw');const s=[...flipState.value];s[i]=true;flipState.value=s},i*520+100))})
+  revealTimers.push(setTimeout(()=>{
     let interp=''
     if(res.length>=2){
       const posCount=res.filter(r=>r.nature==='正面'||r.nature==='中性偏好').length,negCount=res.filter(r=>r.nature==='负面'||r.nature==='中性偏坏').length
@@ -493,9 +494,9 @@ function revealCards(){
     play('cardReveal');results.value=res;interpretation.value=interp;phase.value='result'
     const historyDesc=drawCount.value===1?'单牌':drawCount.value===2?'两牌展开':'三牌展开'
     store.saveHistory('🎴 雷诺曼占卜',res.map(r=>r.name).join('·'),question.value || '（用户未输入问题）')
-  },res.length*520+900)
+  },res.length*520+900))
 }
-function reset(){if(fanTimerId){clearTimeout(fanTimerId);fanTimerId=null};fanCtx=null;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;results.value=[];pickedCount.value=0;shuffleCount.value=0;interpretation.value='';deckDisplay.value=Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2}));phase.value='choose'}
+function reset(){revealTimers.forEach(clearTimeout);revealTimers=[];if(fanTimerId){clearTimeout(fanTimerId);fanTimerId=null};liftGen++;fanCtx=null;pickedIndices=[];pickedList.value=[];pendingResults.value=[];flipState.value=[];liftProgress={};fanOffset=0;results.value=[];pickedCount.value=0;shuffleCount.value=0;interpretation.value='';deckDisplay.value=Array.from({length:7},(_,i)=>({rot:(Math.random()-0.5)*10,ty:-i*2}));phase.value='choose'}
 let fanMouseDown=false
 function onFanMouseDown(e){fanMouseDown=true;onFanTouchStart({touches:[{clientX:e.clientX}]})}
 function onFanMouseMove(e){if(!fanMouseDown)return;onFanTouchMove({touches:[{clientX:e.clientX}]})}
