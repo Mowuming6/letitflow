@@ -525,7 +525,7 @@ function pickFanCard(idx){
 }
 function animateLift(idx){const TARGET=getCardSize(fanH).h*0.3,FRAMES=8;let frame=0;const gen=liftGen;function step(){if(liftGen!==gen)return;frame++;const t=frame/FRAMES;liftProgress[idx]=TARGET*(1-(1-t)*(1-t));drawFan();if(frame<FRAMES)setTimeout(step,16)};step()}
 function revealCards(){
-  const res=pickedIndices.map((cardIdx)=>{const card=shuffledDeck[cardIdx]||TAROT_CARDS[cardIdx],reversed=Math.random()<0.3,kw=TAROT_KEYWORDS[card.origIdx],meaning=kw?kw[reversed?1:0]:'';return{name:card.name,symbol:card.symbol,color:card.color,meaning,reversed,img:card.img}})
+  const res=pickedIndices.map((cardIdx)=>{const card=shuffledDeck[cardIdx]||TAROT_CARDS[cardIdx],reversed=Math.random()<0.3,kw=TAROT_KEYWORDS[card.origIdx],meaning=kw?kw[reversed?1:0]:'';return{name:card.name,symbol:card.symbol,color:card.color,meaning,reversed,img:card.img,origIdx:card.origIdx}})
   pendingResults.value=res;flipState.value=res.map(()=>false);phase.value='flipping'
   res.forEach((_,i)=>{revealTimers.push(setTimeout(()=>{play('cardDraw');const s=[...flipState.value];s[i]=true;flipState.value=s},i*520+100))})
   revealTimers.push(setTimeout(()=>{
